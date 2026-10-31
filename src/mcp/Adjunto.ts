@@ -10,6 +10,7 @@ export class Adjunto {
   private static readonly MIME: Record<string, string> = {
     png: "image/png",
     docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    html: "text/html",
   };
 
   /**
