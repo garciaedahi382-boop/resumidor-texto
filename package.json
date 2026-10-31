@@ -4,10 +4,12 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "test": "bun test",
     "typecheck": "bun check"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "puppeteer": "^25.16.0"
   },
   "peerDependencies": {
     "typescript": "^7"
