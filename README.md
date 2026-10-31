@@ -417,7 +417,9 @@ Qué revisa cada pieza (`infografia` y `presentacion`):
 | --- | --- |
 | 🧾 JSON | El archivo existe, tiene el título y las tres secciones normalizadas (subpuntos y celdas) |
 | 🖼️ HTML | El archivo existe y se abre con la hoja de estilos aplicada |
-| 👀 Texto visible | La portada muestra el título y el subtítulo; la infografía además el resumen y la lista |
+| 👀 Texto visible | La portada muestra el título y el subtítulo; la infografía además el resumen, la lista con subpuntos y la tabla |
+| 👁️ Visibilidad | Cada sección queda visible (opacidad 1, con alto y texto) cuando terminan sus animaciones |
+| 🎞️ Láminas | En la presentación se recorre cada lámina y se comprueba su texto (la tabla no se muestra ahí) |
 | 🚫 Consola | La página no lanza errores de consola ni de JavaScript |
 | 📸 Captura | Guarda `debug/pruebas/<pieza>.png` para revisarlo a ojo |
 
