@@ -6,10 +6,10 @@ import { join } from "node:path";
 import { z } from "zod";
 
 /** Tarea del flujo que una skill puede regular. */
-export type Tarea = "resumen" | "diagrama" | "documento" | "todas";
+export type Tarea = "resumen" | "diagrama" | "documento" | "infografia" | "presentacion" | "todas";
 
 /** Campos de regulación que declara una skill. */
-export type CampoRegulado = "herramientas" | "nivel" | "considerar";
+export type CampoRegulado = "herramientas" | "nivel" | "considerar" | "diseno";
 
 /** Política declarada por una skill para una tarea. */
 export interface PoliticaSkill {
@@ -21,8 +21,10 @@ export interface PoliticaSkill {
   herramientas?: string[];
   /** Nivel de resumen que debe usarse en esa tarea (1 detallado a 4 síntesis). */
   nivel?: number;
-  /** Qué debe tomarse en cuenta al generar los diagramas de esa tarea. */
+  /** Qué debe tomarse en cuenta al generar los diagramas o el contenido de esa tarea. */
   considerar?: string;
+  /** Diseño del catálogo que debe usarse en la infografía o presentación de esa tarea. */
+  diseno?: string;
 }
 
 /** Regulación que se guarda junto a la skill. */
@@ -33,8 +35,10 @@ export interface PoliticaOpcional {
   herramientas?: string[];
   /** Nivel de resumen a usar en esa tarea (1 a 4). */
   nivel?: number;
-  /** Qué debe tenerse en cuenta al construir los diagramas. */
+  /** Qué debe tenerse en cuenta al construir los diagramas o el contenido. */
   considerar?: string;
+  /** Diseño del catálogo a usar en la infografía o presentación de esa tarea. */
+  diseno?: string;
 }
 
 /**
@@ -46,7 +50,7 @@ export class SkillsStore {
   /** Raíz de las skills, leída por el agente como contexto. */
   static readonly DIR = join(homedir(), ".koalacowork");
   /** Campos que una sola skill puede regular por tarea. */
-  private static readonly CAMPOS: CampoRegulado[] = ["herramientas", "nivel", "considerar"];
+  private static readonly CAMPOS: CampoRegulado[] = ["herramientas", "nivel", "considerar", "diseno"];
 
   /**
    * Guarda una skill validando el formato oficial y que no pise la regulación de otra.
@@ -94,7 +98,16 @@ export class SkillsStore {
   }
 
   /**
-   * Criterios que las skills piden tener en cuenta al generar diagramas.
+   * Diseño del catálogo que las skills fijan para una tarea.
+   * @param tarea Tarea del flujo.
+   * @returns Nombre del diseño, o `undefined` si ninguna skill lo fija.
+   */
+  static diseno(tarea: Tarea): string | undefined {
+    return SkillsStore.porTarea(tarea).find((politica) => politica.diseno !== undefined)?.diseno;
+  }
+
+  /**
+   * Criterios que las skills piden tener en cuenta al generar diagramas o contenido.
    * @param tarea Tarea del flujo.
    * @returns Textos de criterios aplicables.
    */
@@ -125,21 +138,22 @@ export class SkillsStore {
   static herramienta() {
     return createTool({
       id: "escribir_skill",
-      description: "Guarda una skill en ~/.koalacowork para regular cómo se resumen los textos, qué herramientas y nivel usa cada tarea y qué considerar al diagramar",
+      description: "Guarda una skill en ~/.koalacowork para regular cómo se resumen los textos, qué herramientas, nivel y diseño usa cada tarea y qué considerar al diagramar o armar el contenido",
       inputSchema: z.object({
         nombre: z.string().describe("Nombre único en minúsculas, números y guiones (ej. tono-formal)"),
         descripcion: z.string().describe("Cuándo y para qué debe usarse la skill"),
         instrucciones: z.string().describe("Instrucciones en Markdown que el resumidor aplicará"),
-        tarea: z.enum(["resumen", "diagrama", "documento", "todas"]).optional().describe("Tarea que regula la skill"),
+        tarea: z.enum(["resumen", "diagrama", "documento", "infografia", "presentacion", "todas"]).optional().describe("Tarea que regula la skill"),
         herramientas: z.array(z.string()).optional().describe("Herramientas permitidas para esa tarea; vacío significa ninguna"),
         nivel: z.number().int().min(1).max(4).optional().describe("Nivel de resumen a usar en esa tarea (1 detallado, 4 síntesis)"),
-        considerar: z.string().optional().describe("Qué debe tenerse en cuenta al construir los diagramas de esa tarea"),
+        considerar: z.string().optional().describe("Qué debe tenerse en cuenta al construir los diagramas o el contenido de esa tarea"),
+        diseno: z.string().optional().describe("Diseño del catálogo que debe usarse en la infografía o presentación de esa tarea"),
       }),
       execute: async (input) => {
         if (!SkillsStore.permite("resumen", "escribir_skill")) {
           return { archivo: "", error: "Una skill vigente no permite escribir nuevas skills en la tarea resumen" };
         }
-        const politica = { tarea: input.tarea, herramientas: input.herramientas, nivel: input.nivel, considerar: input.considerar };
+        const politica = { tarea: input.tarea, herramientas: input.herramientas, nivel: input.nivel, considerar: input.considerar, diseno: input.diseno };
         try {
           return { archivo: SkillsStore.escribir(input.nombre, input.descripcion, input.instrucciones, politica) };
         } catch (error) {
@@ -201,6 +215,7 @@ export class SkillsStore {
     if (politica.herramientas) lineas.push(`herramientas: [${politica.herramientas.join(", ")}]`);
     if (politica.nivel) lineas.push(`nivel: ${politica.nivel}`);
     if (politica.considerar) lineas.push(`considerar: ${JSON.stringify(politica.considerar)}`);
+    if (politica.diseno) lineas.push(`diseno: ${politica.diseno}`);
     return lineas.join("\n");
   }
 
@@ -218,12 +233,14 @@ export class SkillsStore {
     const lista = bloque.match(/^herramientas:\s*\[(.*)\]\s*$/m)?.[1];
     const nivel = Number(bloque.match(/^nivel:\s*(\d+)\s*$/m)?.[1]);
     const considerar = bloque.match(/^considerar:\s*(.+)\s*$/m)?.[1];
+    const diseno = bloque.match(/^diseno:\s*(\S+)\s*$/m)?.[1];
     return {
       nombre,
       tarea,
       herramientas: lista === undefined ? undefined : SkillsStore.lista(lista),
       nivel: Number.isInteger(nivel) && nivel >= 1 && nivel <= 4 ? nivel : undefined,
       considerar: considerar === undefined ? undefined : SkillsStore.texto(considerar),
+      diseno,
     };
   }
 
