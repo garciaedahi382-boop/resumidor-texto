@@ -1,4 +1,5 @@
 import { Agent } from "@mastra/core/agent";
+import { SkillsStore } from "../skills/SkillsStore";
 import { Contexto } from "./Contexto";
 import type { Modelo } from "./ModeloLlm";
 
@@ -35,6 +36,8 @@ export class Resumidor {
       name: "resumidor",
       instructions: "Eres un resumidor de textos. Responde únicamente con el resumen del texto recibido, sin saludos, prefacios, despedidas ni explicaciones adicionales.",
       model,
+      skills: [SkillsStore.DIR],
+      tools: { escribir_skill: SkillsStore.herramienta() },
     });
   }
 
