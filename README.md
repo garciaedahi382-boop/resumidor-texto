@@ -387,7 +387,7 @@ bun index.ts
 
 ## 🧪 Smoke test
 
-Comprueba que todo funciona sin gastar créditos del modelo: levanta un mock local de la API, renderiza los 17 diagramas y el documento, y valida el servidor MCP (tools, resumen y adjuntos en base64).
+Comprueba que todo funciona sin gastar créditos del modelo: levanta un mock local de la API, renderiza los 17 diagramas y el documento, arma las piezas de contenido (el JSON y su HTML) con el ejecutable real, y valida el servidor MCP (tools, resumen, contenido y adjuntos en base64).
 
 ```bash
 bun debug/smoke.ts
@@ -401,6 +401,7 @@ Los resultados quedan en `debug/`:
 | `debug/smoke.json` | Resultados estructurados |
 | `debug/smoke-<tipo>.png` / `.docx` | Archivos generados por el render |
 | `debug/smoke-mcp-*.png` / `.docx` | Adjuntos devueltos por el MCP |
+| `debug/smoke-contenido-*.json` / `.html` | Entrada normalizada y pieza armada por el ejecutable |
 
 ## ⚙️ Cambiar de proveedor o modelo
 
