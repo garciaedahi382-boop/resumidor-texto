@@ -28,11 +28,13 @@ class Piezas {
       { tipo: "desconocida" },
     ],
   };
-  /** Fragmentos que cada pieza debe mostrar: la portada muestra solo el título y el subtítulo. */
+  /** Fragmentos que cada pieza debe mostrar: la portada solo muestra el título y el subtítulo. */
   static readonly ESPERADO: Record<Pieza, string[]> = {
-    infografia: ["Contexto", "Texto del contexto.", "Uno"],
+    infografia: ["Resumen del periodo", "Contexto", "Texto del contexto.", "Puntos", "Uno", "Sub uno", "Sub dos", "Dos", "Datos", "Nombre", "Valor", "Fuente de prueba"],
     presentacion: ["Resumen del periodo"],
   };
+  /** Selector de las secciones visibles de cada pieza. */
+  static readonly SECCIONES: Record<Pieza, string> = { infografia: ".ig-seccion", presentacion: ".slide.is-active" };
   /** Directorio de las capturas de pantalla. */
   static readonly CAPTURAS = join("debug", "pruebas");
   /** Ejecutable de las piezas, usado si el entorno no define `CONTENIDO_BIN`. */
@@ -81,7 +83,31 @@ class Piezas {
     });
     pagina.on("pageerror", (error) => errores.push(error instanceof Error ? error.message : String(error)));
     await pagina.goto(pathToFileURL(archivo).href, { waitUntil: "load" });
+    await Piezas.animaciones(pagina);
     return { pagina, errores };
+  }
+
+  /**
+   * Espera a que terminen las animaciones y transiciones de la página.
+   * @param pagina Página cargada.
+   */
+  static async animaciones(pagina: Page): Promise<void> {
+    await pagina.evaluate(() => Promise.all((globalThis as any).document.getAnimations().map((animacion: any) => animacion.finished)));
+  }
+
+  /**
+   * Mide las secciones pedidas: texto, opacidad y alto ya con las animaciones terminadas.
+   * @param pagina Página cargada.
+   * @param selector Selector de las secciones.
+   * @returns Texto, opacidad y alto de cada sección.
+   */
+  static secciones(pagina: Page, selector: string): Promise<{ texto: string; opacidad: number; alto: number }[]> {
+    return pagina.$$eval(selector, (nodos) =>
+      nodos.map((nodo) => {
+        const estilo = (globalThis as any).getComputedStyle(nodo);
+        return { texto: String((nodo as any).innerText ?? ""), opacidad: Number(estilo.opacity), alto: Math.round(nodo.getBoundingClientRect().height) };
+      }),
+    );
   }
 }
 
@@ -110,15 +136,50 @@ describe("piezas de contenido", () => {
       const { pagina, errores } = await Piezas.cargar(Contenido.archivo(pieza));
       const texto = await pagina.evaluate(() => (globalThis as any).document.body.innerText as string);
       const alto = await pagina.evaluate(() => (globalThis as any).document.body.scrollHeight as number);
+      const secciones = await Piezas.secciones(pagina, Piezas.SECCIONES[pieza]);
       const estilos = await pagina.evaluate(() => (globalThis as any).document.styleSheets.length as number);
       const cajas = await pagina.evaluate(() => (globalThis as any).document.body.querySelectorAll("*").length as number);
       await pagina.screenshot({ path: join(Piezas.CAPTURAS, `${pieza}.png`), fullPage: true });
       await pagina.close();
       for (const fragmento of ["Reforma educativa", ...Piezas.ESPERADO[pieza]]) expect(texto).toContain(fragmento);
+      expect(secciones.length).toBeGreaterThan(0);
+      for (const seccion of secciones) {
+        expect(seccion.opacidad).toBeGreaterThan(0.99);
+        expect(seccion.alto).toBeGreaterThan(10);
+        expect(seccion.texto.length).toBeGreaterThan(0);
+      }
+      if (pieza === "infografia") {
+        expect(secciones.length).toBe(3);
+        expect(secciones.map((seccion) => seccion.texto).join(" ")).toContain("Datos");
+      }
       expect(alto).toBeGreaterThan(200);
       expect(estilos).toBeGreaterThan(0);
       expect(cajas).toBeGreaterThan(10);
       expect(errores).toEqual([]);
     });
   }
+
+  test("presentacion: cada lámina muestra su contenido", async () => {
+    const { pagina, errores } = await Piezas.cargar(Contenido.archivo("presentacion"));
+    const laminas = await pagina.$$eval(".slide", (nodos) => nodos.length);
+    const vistas: string[] = [];
+    for (let indice = 0; indice < laminas; indice += 1) {
+      vistas.push(await pagina.evaluate(() => (globalThis as any).document.body.innerText as string));
+      const activa = await Piezas.secciones(pagina, Piezas.SECCIONES["presentacion"]);
+      expect(activa.length).toBe(1);
+      expect(activa[0]?.opacidad ?? 0).toBeGreaterThan(0.99);
+      if (indice < laminas - 1) {
+        await pagina.click("#nav-siguiente");
+        await Piezas.animaciones(pagina);
+      }
+    }
+    await pagina.screenshot({ path: join(Piezas.CAPTURAS, "presentacion-ultima.png"), fullPage: true });
+    await pagina.close();
+    expect(laminas).toBe(3);
+    expect(vistas[0]).toContain("Resumen del periodo");
+    expect(vistas[1]).toContain("Contexto");
+    expect(vistas[2]).toContain("Sub uno");
+    expect(vistas[2]).toContain("Dos");
+    expect(errores).toEqual([]);
+  });
 });
