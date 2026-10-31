@@ -11,7 +11,7 @@ import { Adjunto } from "./Adjunto";
  */
 export class ServidorMcp {
   /** Servidor MCP con los tools registrados. */
-  private readonly server = new McpServer({ name: "resumidor-texto", version: "1.0.0" });
+  private readonly server = new McpServer({ name: "koala-cowork", version: "1.0.0" });
 
   constructor() {
     this.registrarResumen();

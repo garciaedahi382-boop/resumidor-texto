@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "resumidor_texto",
+      "name": "koala-cowork",
       "dependencies": {
         "@mastra/core": "^1.79.0",
         "@mastra/openai": "^1.1.3",
