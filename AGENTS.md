@@ -1,5 +1,7 @@
 # Reglas del Agente
 
+Herramienta: **Koala Cowork** (skills en `~/.koalacowork`).
+
 ## Principios
 - Nunca crear algo que no se haya pedido expl\u00edcitamente
 - Nunca generar archivos adicionales no solicitados (README, docs, tests, etc.)
@@ -20,7 +22,8 @@
 `src/agente/AgenteResumen.ts`:singleton fachada;compone ModeloLlm+Resumidor+Diagramador+Documentador;workflow flujo-resumen=step resumir->then step diagrama-<tipo> c/u->then step documento-<tipo> c/u;api ejecutar|resumir|diagramar|documentar
 `src/agente/ModeloLlm.ts`:static configuracion(cfg)=proveedor/modelo(openai|openrouter)
 `src/agente/Contexto.ts`:static tokens/dividir;limite()=/models cacheado(fallback 8192)
-`src/agente/Resumidor.ts`:Agent resumidor;EXTENSIONES 4 niveles;resumir(nivel)|niveles();si>contexto fragmenta via resumirTexto/dividir
+`src/agente/Resumidor.ts`:Agent resumidor;skills=[SkillsStore.DIR]+tool escribir_skill;EXTENSIONES 4 niveles;resumir(nivel)|niveles();si>contexto fragmenta via resumirTexto/dividir
+`src/skills/SkillsStore.ts`:DIR=~/.koalacowork;escribir(nombre,descripcion,instrucciones)-><nombre>/SKILL.md validado con validateSkillContent(mastra);herramienta()=tool escribir_skill
 `src/agente/Diagramador.ts`:Agent diagramador+tool;diagramar(tipo,texto)=Horramientas.archivo+mkdir+DiagramRenderer.prompt+generate->assert exists <dir>/<tipo>.<extension>
 `src/agente/Documentador.ts`:Agent documentador+tool;documentar(tipo,texto)=igual con prompt(...,"renderizar_documento")->assert documentos/<tipo>.docx
 `src/diagramas/DiagramRenderer.ts`:abstract;abstract type,schema,draw();extension="png",dir="diagramas";opt ancho/alto;render()->canvas png;static prompt({type,schema},texto,herramienta="renderizar_diagrama");helpers roundRect,box,wrap,arrow,line,smallText

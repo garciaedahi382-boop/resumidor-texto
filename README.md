@@ -1,4 +1,6 @@
-# 📝 Resumidor de Textos con Diagramas
+# 🐨 Koala Cowork
+
+**Koala Cowork** es tu resumidor de textos con diagramas: 4 niveles, 17 diagramas y documentos Word.
 
 Convierte cualquier texto largo en **4 niveles de resumen** y lo entrega en **varios formatos**: texto, **imágenes PNG** y **documentos Word**. 🚀
 
@@ -86,12 +88,42 @@ Cada nivel se crea leyendo **el texto completo**, solo cambia el grado de conden
 
 | Agente | Responsabilidad |
 |--------|-----------------|
-| 🧠 `Resumidor` | Genera los 4 niveles |
+| 🧠 `Resumidor` | Genera los 4 niveles y aplica las skills del usuario |
 | 🎨 `Diagramador` | Genera los diagramas PNG |
 | 📄 `Documentador` | Genera los documentos Word |
 | 🎛️ `AgenteResumen` | Orquesta el flujo: resumir → diagramar → documentar |
 
 Cada pieza tiene un único trabajo, y el flujo se ejecuta de principio a fin con un solo comando.
+
+## 🧠 Skills del usuario
+
+El resumidor se puede **regular con skills**: instrucciones en Markdown que se guardan en la carpeta `.koalacowork` de tu usuario y que el agente lee como contexto antes de resumir. 🎛️
+
+Usa el **soporte oficial de skills de Mastra** (`Agent.skills`), así que respeta la especificación de Agent Skills y valida el formato al guardar.
+
+| Elemento | Detalle |
+|----------|---------|
+| 📁 Carpeta | `~/.koalacowork` (se crea sola la primera vez) |
+| 📄 Archivo | `~/.koalacowork/<nombre>/SKILL.md` |
+| 📝 Contenido | Frontmatter con `name` y `description` + instrucciones en Markdown |
+| 🔤 Nombre | Solo minúsculas, números y guiones (máx. 64 caracteres) |
+| 🛠️ Herramienta | `escribir_skill` (`nombre`, `descripcion`, `instrucciones`), disponible para el agente |
+
+Ejemplo de `~/.koalacowork/tono-formal/SKILL.md`:
+
+```markdown
+---
+name: tono-formal
+description: "Usar cuando el resumen deba ser formal y sin coloquialismos"
+---
+
+# Reglas
+- Trata de usted al lector
+- Sin emojis ni exclamaciones
+- Conserva las cifras y fechas exactas
+```
+
+Las skills se **releen en cada ejecución**, así que puedes editarlas a mano o pedirle al agente que las escriba sin reiniciar nada. ♻️
 
 ## 🚀 Empezar
 
@@ -130,10 +162,10 @@ Habla **MCP sobre stdio**, así que cualquier cliente compatible puede lanzarlo 
 ```json
 {
   "mcpServers": {
-    "resumidor-texto": {
+    "koala-cowork": {
       "command": "bun",
       "args": ["index.ts", "mcp"],
-      "cwd": "/ruta/a/resumidor_texto"
+      "cwd": "/ruta/a/koala-cowork"
     }
   }
 }
@@ -233,5 +265,6 @@ bun index.ts config --provider openrouter --model anthropic/claude-3.5-sonnet
 | 🖼️ Diagramas | Carpeta `diagramas/` del proyecto (con `--solo-resumen` no se generan) |
 | 📄 Documentos | Carpeta `documentos/` del proyecto (con `--solo-resumen` no se generan) |
 | 🧪 Resultados del smoke test | Carpeta `debug/` |
+| 🧠 Skills del usuario | `~/.koalacowork/<nombre>/SKILL.md` |
 
 Los nombres de archivo usan el tipo interno, así que un diagrama de Ishikawa queda en `diagramas/ishikawa.png` y la tabla de cambios en `documentos/tabla-cambios.docx`. 📂
