@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { AgenteResumen } from "../agente/AgenteResumen";
 import { Herramientas } from "../agente/Herramientas";
+import { SkillsStore } from "../skills/SkillsStore";
 import { Adjunto } from "./Adjunto";
 
 /**
@@ -29,12 +30,13 @@ export class ServidorMcp {
         description: "Resume un texto en 4 niveles: 1 detallado, 2 medio, 3 breve, 4 síntesis",
         inputSchema: {
           texto: z.string().describe("Texto a resumir"),
-          nivel: z.number().int().min(1).max(4).describe("Nivel de resumen a generar (1 detallado, 2 medio, 3 breve, 4 síntesis)"),
+          nivel: z.number().int().min(1).max(4).optional().describe("Nivel de resumen (1 detallado, 2 medio, 3 breve, 4 síntesis); si se omite se usa el que fijen las skills"),
         },
       },
       async ({ texto, nivel }) => {
-        const resumen = await AgenteResumen.getInstance().resumir(texto, nivel);
-        return { content: [{ type: "text" as const, text: `Nivel ${nivel}:\n${resumen}` }] };
+        const efectivo = nivel ?? SkillsStore.nivel("resumen") ?? 1;
+        const resumen = await AgenteResumen.getInstance().resumir(texto, efectivo);
+        return { content: [{ type: "text" as const, text: `Nivel ${efectivo}:\n${resumen}` }] };
       },
     );
   }

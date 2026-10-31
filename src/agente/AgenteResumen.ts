@@ -7,6 +7,8 @@ import { Documentador } from "./Documentador";
 import { ModeloLlm } from "./ModeloLlm";
 import { Resumidor } from "./Resumidor";
 import { Herramientas } from "./Herramientas";
+import { SkillsStore } from "../skills/SkillsStore";
+import type { Tarea } from "../skills/SkillsStore";
 
 /** Entrada del workflow: texto fuente y si se generan diagramas y documentos. */
 const EsquemaEntrada = z.object({ texto: z.string(), conDiagramas: z.boolean() });
@@ -53,8 +55,8 @@ export class AgenteResumen {
         inputSchema: EsquemaResumen,
         outputSchema: EsquemaResumen,
         execute: async ({ inputData }) => {
-          if (!inputData.conDiagramas) return { niveles: inputData.niveles, archivos: inputData.archivos, conDiagramas: false };
-          const archivo = await this.diagramador.diagramar(tipo, inputData.niveles[0]);
+          if (!inputData.conDiagramas || !SkillsStore.permite("diagrama", "renderizar_diagrama")) return { niveles: inputData.niveles, archivos: inputData.archivos, conDiagramas: inputData.conDiagramas };
+          const archivo = await this.diagramador.diagramar(tipo, this.fuente(inputData.niveles, "diagrama"));
           return { niveles: inputData.niveles, archivos: [...inputData.archivos, archivo], conDiagramas: true };
         },
       }),
@@ -66,8 +68,8 @@ export class AgenteResumen {
         inputSchema: EsquemaResumen,
         outputSchema: EsquemaResumen,
         execute: async ({ inputData }) => {
-          if (!inputData.conDiagramas) return { niveles: inputData.niveles, archivos: inputData.archivos, conDiagramas: false };
-          const archivo = await this.documentador.documentar(tipo, inputData.niveles[0]);
+          if (!inputData.conDiagramas || !SkillsStore.permite("documento", "renderizar_documento")) return { niveles: inputData.niveles, archivos: inputData.archivos, conDiagramas: inputData.conDiagramas };
+          const archivo = await this.documentador.documentar(tipo, this.fuente(inputData.niveles, "documento"));
           return { niveles: inputData.niveles, archivos: [...inputData.archivos, archivo], conDiagramas: true };
         },
       }),
@@ -100,7 +102,7 @@ export class AgenteResumen {
   /**
    * Ejecuta el workflow completo de resumen, diagramas y documentos.
    * @param texto Texto fuente a procesar.
-   * @param conDiagramas Si es `true`, genera todos los diagramas y documentos a partir del nivel 1.
+   * @param conDiagramas Si es `true`, genera todos los diagramas y documentos con el nivel que fijen las skills.
    * @returns Los 4 niveles y las rutas de los archivos generados.
    * @throws Error si el workflow falla o termina en un estado inesperado.
    */
@@ -113,13 +115,24 @@ export class AgenteResumen {
   }
 
   /**
+   * Texto de origen de una tarea según el nivel fijado por las skills.
+   * @param niveles Los 4 niveles de resumen.
+   * @param tarea Tarea que consume el texto.
+   * @returns Nivel de resumen correspondiente (nivel 1 si ninguna skill lo fija).
+   */
+  private fuente(niveles: [string, string, string, string], tarea: Tarea): string {
+    const nivel = SkillsStore.nivel(tarea) ?? 1;
+    return niveles[nivel - 1] ?? niveles[0];
+  }
+
+  /**
    * Genera un único nivel de resumen sin pasar por el workflow.
    * @param texto Texto a resumir.
-   * @param nivel Nivel de resumen, entre 1 y 4.
+   * @param nivel Nivel de resumen, entre 1 y 4; si se omite se usa el de las skills.
    * @returns Resumen del nivel pedido.
    */
-  resumir(texto: string, nivel: number): Promise<string> {
-    return this.resumidor.resumir(texto, nivel);
+  resumir(texto: string, nivel?: number): Promise<string> {
+    return this.resumidor.resumir(texto, nivel ?? SkillsStore.nivel("resumen") ?? 1);
   }
 
   /**

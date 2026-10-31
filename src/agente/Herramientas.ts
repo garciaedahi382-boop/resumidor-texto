@@ -21,6 +21,7 @@ import { FlujoActualizacionRenderer } from "../diagramas/FlujoActualizacionRende
 import { SipocRenderer } from "../diagramas/SipocRenderer";
 import { MapaFlujoValorRenderer } from "../diagramas/MapaFlujoValorRenderer";
 import { TablaCambiosDocx } from "../documentos/TablaCambiosDocx";
+import { SkillsStore } from "../skills/SkillsStore";
 
 /**
  * Registro de diagramas, documentos y sus herramientas de render para los agentes.
@@ -117,6 +118,7 @@ export class Herramientas {
         datos: z.record(z.string(), z.any()).describe("Datos JSON del diagrama según su estructura"),
       }),
       execute: async (input) => {
+        if (!SkillsStore.permite("diagrama", "renderizar_diagrama")) return { archivo: "", error: "Una skill vigente no permite generar diagramas" };
         const renderer = Herramientas.renderers[input.tipo];
         if (!renderer) return { archivo: "", error: `Tipo no soportado: ${input.tipo}` };
         const archivo = Herramientas.archivo(input.tipo);
@@ -140,6 +142,7 @@ export class Herramientas {
         datos: z.record(z.string(), z.any()).describe("Datos JSON del documento según su estructura"),
       }),
       execute: async (input) => {
+        if (!SkillsStore.permite("documento", "renderizar_documento")) return { archivo: "", error: "Una skill vigente no permite generar documentos" };
         const documento = Herramientas.documentos[input.tipo];
         if (!documento) return { archivo: "", error: `Tipo no soportado: ${input.tipo}` };
         const archivo = Herramientas.archivo(input.tipo);

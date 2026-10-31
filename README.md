@@ -107,7 +107,7 @@ Usa el **soporte oficial de skills de Mastra** (`Agent.skills`), así que respet
 | 📄 Archivo | `~/.koalacowork/<nombre>/SKILL.md` |
 | 📝 Contenido | Frontmatter con `name` y `description` + instrucciones en Markdown |
 | 🔤 Nombre | Solo minúsculas, números y guiones (máx. 64 caracteres) |
-| 🛠️ Herramienta | `escribir_skill` (`nombre`, `descripcion`, `instrucciones`), disponible para el agente |
+| 🛠️ Herramienta | `escribir_skill` (`nombre`, `descripcion`, `instrucciones`, `tarea`, `herramientas`), disponible para el agente |
 
 Ejemplo de `~/.koalacowork/tono-formal/SKILL.md`:
 
@@ -122,6 +122,52 @@ description: "Usar cuando el resumen deba ser formal y sin coloquialismos"
 - Sin emojis ni exclamaciones
 - Conserva las cifras y fechas exactas
 ```
+
+### 🚦 Regular las herramientas y el nivel por tarea
+
+Una skill decide **qué herramientas puede usar cada tarea**, **con qué nivel de resumen** trabaja y **qué debe tomarse en cuenta** al diagramar. Se declara en el frontmatter con `tarea` (`resumen`, `diagrama`, `documento` o `todas`), `herramientas` (lista de permitidas; `[]` significa ninguna), `nivel` (1 detallado → 4 síntesis) y `considerar` (criterios para los diagramas):
+
+```markdown
+---
+name: solo-resumen
+description: "Cuando se quieren resúmenes sin archivos"
+tarea: diagrama
+herramientas: []
+nivel: 3
+considerar: "Prioriza causas humanas y evita tecnicismos"
+---
+
+# Reglas
+- No generar diagramas ni documentos
+- Si se generan, que salgan del resumen breve
+```
+
+`considerar` se agrega al pedido que recibe el agente que diagrama, así que aplica a **los 17 tipos**: el criterio viaja en el prompt del diagrama, no en el texto fuente. 🎯
+
+| Tarea | Herramientas disponibles |
+|-------|--------------------------|
+| 📝 `resumen` | `escribir_skill` |
+| 🎨 `diagrama` | `renderizar_diagrama` (una por cada tipo) |
+| 📄 `documento` | `renderizar_documento` |
+
+Cómo se aplica:
+
+- Si **ninguna** skill restringe una tarea, todo queda permitido y se usa el **nivel 1** (comportamiento por defecto).
+- Si varias skills restringen la misma tarea, se aplica la **intersección** de herramientas y el **nivel más detallado** (el número más bajo).
+- Cada tarea usa su propio nivel: los diagramas y documentos toman su texto del nivel fijado para `diagrama` y `documento`; `resumir` usa el de `resumen` cuando no se indica uno.
+- Cuando una herramienta queda bloqueada, el agente recibe un **error explícito** y, en el flujo completo, esa tarea se omite sin afectar a las demás (si bloqueas diagramas, los documentos se siguen generando). 🚫
+
+### 🔒 Una skill por regulación
+
+Para que las skills no se pisen, cada campo (`herramientas`, `nivel`, `considerar`) puede declararlo **una sola skill por tarea**. Al guardar se valida:
+
+| Caso | Resultado |
+|------|-----------|
+| Otra skill ya regula ese campo para la misma tarea | ❌ Se rechaza y se pide editar la existente |
+| Otra skill lo regula con `tarea: todas` | ❌ También se rechaza (aplica a todas) |
+| Se regula un campo sin declarar `tarea` | ❌ Se rechaza |
+| Volver a guardar la **misma** skill (mismo nombre) | ✅ Se permite, es una edición |
+| Campos distintos en la misma tarea | ✅ Se permite (una puede fijar `nivel` y otra `considerar`)|
 
 Las skills se **releen en cada ejecución**, así que puedes editarlas a mano o pedirle al agente que las escriba sin reiniciar nada. ♻️
 
