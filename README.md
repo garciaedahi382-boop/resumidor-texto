@@ -403,6 +403,26 @@ Los resultados quedan en `debug/`:
 | `debug/smoke-mcp-*.png` / `.docx` | Adjuntos devueltos por el MCP |
 | `debug/smoke-contenido-*.json` / `.html` | Entrada normalizada y pieza armada por el ejecutable |
 
+## 🖱️ Pruebas en navegador
+
+Las piezas de contenido se prueban **en un navegador real** con [Puppeteer](https://pptr.dev): se arma el JSON, se abre el HTML y se revisa que se vea lo que se entregó.
+
+```bash
+bun test
+```
+
+Qué revisa cada pieza (`infografia` y `presentacion`):
+
+| Revisión | Qué comprueba |
+| --- | --- |
+| 🧾 JSON | El archivo existe, tiene el título y las tres secciones normalizadas (subpuntos y celdas) |
+| 🖼️ HTML | El archivo existe y se abre con la hoja de estilos aplicada |
+| 👀 Texto visible | La portada muestra el título y el subtítulo; la infografía además el resumen y la lista |
+| 🚫 Consola | La página no lanza errores de consola ni de JavaScript |
+| 📸 Captura | Guarda `debug/pruebas/<pieza>.png` para revisarlo a ojo |
+
+El navegador lo descarga Puppeteer; si falta, se instala con `bunx puppeteer browsers install chrome`. 🧷
+
 ## ⚙️ Cambiar de proveedor o modelo
 
 Vuelve a ejecutar `config` con los nuevos valores. Lo que no indiques se conserva de la configuración anterior, así que puedes cambiar solo el modelo sin reescribir todo. 🔄
