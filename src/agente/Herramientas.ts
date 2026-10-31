@@ -18,6 +18,8 @@ import { ParetoRenderer } from "../diagramas/ParetoRenderer";
 import { FlujoProcesoRenderer } from "../diagramas/FlujoProcesoRenderer";
 import { ArbolDecisionRenderer } from "../diagramas/ArbolDecisionRenderer";
 import { FlujoActualizacionRenderer } from "../diagramas/FlujoActualizacionRenderer";
+import { SipocRenderer } from "../diagramas/SipocRenderer";
+import { MapaFlujoValorRenderer } from "../diagramas/MapaFlujoValorRenderer";
 import { TablaCambiosDocx } from "../documentos/TablaCambiosDocx";
 
 /**
@@ -41,6 +43,8 @@ export class Herramientas {
     "flujo-proceso": new FlujoProcesoRenderer(),
     "arbol-decision": new ArbolDecisionRenderer(),
     "flujo-actualizacion": new FlujoActualizacionRenderer(),
+    sipoc: new SipocRenderer(),
+    "mapa-flujo-valor": new MapaFlujoValorRenderer(),
   };
 
   /** Documentos disponibles indexados por tipo. */
