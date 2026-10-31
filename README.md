@@ -1,8 +1,30 @@
+<div align="center">
+
 # 🐨 Koala Cowork
 
-**Koala Cowork** es tu resumidor de textos con diagramas: 4 niveles, 17 diagramas, documentos Word y el JSON de contenido de infografías y presentaciones.
+### El koala que no suelta el texto hasta exprimirlo
 
-Convierte cualquier texto largo en **4 niveles de resumen** y lo entrega en **varios formatos**: texto, **imágenes PNG**, **documentos Word** y el **JSON de contenido** de una infografía o una presentación. 🚀
+De un texto largo a **4 niveles de resumen**, **17 diagramas PNG**, **documentos Word** y el **JSON de contenido** de infografías y presentaciones. Todo con una sola herramienta: por tu **línea de comandos** o como **servidor MCP**. 🚀
+
+![Bun](https://img.shields.io/badge/Bun-runtime-000000?logo=bun&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-tipado-3178C6?logo=typescript&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-stdio-6E56CF)
+![Salidas](https://img.shields.io/badge/salidas-PNG%20%C2%B7%20DOCX%20%C2%B7%20JSON-2F9E44)
+![Skills](https://img.shields.io/badge/skills-propias-F59F00)
+
+</div>
+
+> 🐨 **Koala Cowork** es tu compañero de trabajo: se sube al árbol del texto, lo recorre completo y no baja hasta dejar el paquete servido. Lento con calma, prolijo con el resultado.
+
+## 🧬 La marca
+
+| Elemento | Qué representa |
+| --- | --- |
+| 🐨 **Koala** | Trabajo paciente y completo: el texto se lee entero y nunca se pierde la mitad del camino |
+| 🤝 **Cowork** | Trabaja contigo: la CLI es para ti, el servidor MCP para tu agente |
+| 🧾 **Paquete completo** | Un texto entra, sale resumen + diagramas + documentos + JSON de contenido |
+| 🗣️ **Voz de marca** | Español claro, cercano y sin jerga; las cifras y fechas se conservan tal cual |
+| 🧠 **Skills propias** | Tú pones las reglas con skills en `~/.koalacowork`; el koala las respeta |
 
 ## ✨ ¿Qué hace?
 
@@ -13,6 +35,14 @@ Convierte cualquier texto largo en **4 niveles de resumen** y lo entrega en **va
 5. 🧾 Y entrega el **JSON de contenido** de una infografía o una presentación, con el diseño elegido por nombre
 
 Todo se puede usar desde la **línea de comandos** o como **servidor MCP** para que lo consuma un agente externo. 🤖
+
+### 🎯 Los tres sellos del koala
+
+| Sello | Qué significa |
+| --- | --- |
+| 🔒 **Tu clave, tu equipo** | La configuración vive en `~/.secti_addons/modelr.json`; nada viaja a servidores del proyecto |
+| 🧩 **Un trabajo por pieza** | Resumidor, diagramador, documentador y las piezas de contenido: cada uno hace solo lo suyo |
+| 📦 **Todo en carpetas claras** | `diagramas/`, `documentos/` y `contenido/`: lo que generó el koala, a la vista |
 
 ## 📚 Los 4 niveles de resumen
 
@@ -246,6 +276,8 @@ Las skills se **releen en cada ejecución**, así que puedes editarlas a mano o 
 
 ## 🚀 Empezar
 
+> 🐨 En **tres pasos**: configura el proveedor, deja que el koala resuma, y (si quieres) conéctalo a tu agente por MCP.
+
 ### 1️⃣ Configura tu proveedor
 
 **🌐 Con OpenRouter:**
@@ -378,6 +410,12 @@ Vuelve a ejecutar `config` con los nuevos valores. Lo que no indiques se conserv
 bun index.ts config --provider openrouter --model anthropic/claude-3.5-sonnet
 ```
 
+## 🏷️ Koala Cowork en una línea
+
+> **Koala Cowork** 🐨 — *el resumidor que no suelta el texto hasta entregarte el paquete completo: 4 niveles, 17 diagramas, documentos Word y el JSON de contenido.*
+
+Si tienes que presentarlo en algún lado, con eso basta. 📣
+
 ## 📁 Dónde queda todo
 
 | Elemento | Ubicación |
@@ -390,3 +428,15 @@ bun index.ts config --provider openrouter --model anthropic/claude-3.5-sonnet
 | 🧠 Skills del usuario | `~/.koalacowork/<nombre>/SKILL.md` |
 
 Los nombres de archivo usan el tipo interno, así que un diagrama de Ishikawa queda en `diagramas/ishikawa.png`, la tabla de cambios en `documentos/tabla-cambios.docx` y la entrada de una infografía en `contenido/infografia.json`. 📂
+
+---
+
+<div align="center">
+
+### 🐨 Koala Cowork
+
+*Lee completo. Resume claro. Entrega todo.*
+
+Hecho con 💙 por **Edahi Yaxquin Avila Garcia**
+
+</div>
