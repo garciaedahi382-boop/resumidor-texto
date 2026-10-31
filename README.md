@@ -6,7 +6,7 @@ Convierte cualquier texto largo en **4 niveles de resumen** y lo entrega en **va
 
 1. 📄 Le das un texto
 2. 🧠 Te devuelve el resumen en **4 niveles de detalle**, en texto
-3. 🎨 Lo entrega también como **15 diagramas** en imágenes PNG a partir del nivel más detallado
+3. 🎨 Lo entrega también como **17 diagramas** en imágenes PNG a partir del nivel más detallado
 4. 📄 Y como **documentos Word** (tablas) con la misma información
 
 Todo se puede usar desde la **línea de comandos** o como **servidor MCP** para que lo consuma un agente externo. 🤖
@@ -29,12 +29,12 @@ El resumen no se queda en texto: sale en tres formatos. 📤
 | Formato | Qué entrega | Cómo se obtiene |
 |---------|-------------|-----------------|
 | 📝 Texto | Los 4 niveles (detallado → síntesis) | Pantalla con `summarize` o herramienta MCP `resumir` |
-| 🖼️ Imagen PNG | Los 15 diagramas | Archivos en `diagramas/` o herramientas `diagrama_<tipo>` |
+| 🖼️ Imagen PNG | Los 17 diagramas | Archivos en `diagramas/` o herramientas `diagrama_<tipo>` |
 | 📄 Word DOCX | Las tablas de análisis | Archivo en `documentos/` o herramienta `documento_<tipo>` |
 
 Por MCP, los archivos vuelven **embebidos en base64** (imagen o recurso), así el agente que consulta recibe el contenido sin depender del disco. 🔐
 
-## 🎨 Los 15 diagramas
+## 🎨 Los 17 diagramas
 
 | Diagrama | Tipo interno | Ideal para... |
 |----------|--------------|---------------|
@@ -53,6 +53,8 @@ Por MCP, los archivos vuelven **embebidos en base64** (imagen o recurso), así e
 | 🔀 Flujo de proceso | `flujo-proceso` | Procesos con decisiones y ramas |
 | 🌿 Árbol de decisión | `arbol-decision` | Preguntas, alternativas y resultados |
 | 🔄 Flujo de actualización | `flujo-actualizacion` | Fases de una actualización y su estado |
+| 🏭 SIPOC | `sipoc` | Ver proveedores, entradas, proceso, salidas y clientes |
+| ⚙️ Mapa de flujo de valor | `mapa-flujo-valor` | Medir valor y desperdicio a lo largo del proceso |
 
 ## 📄 Los documentos
 
@@ -115,7 +117,7 @@ La configuración queda guardada en tu equipo (carpeta `.secti_addons` de tu usu
 bun index.ts summarize "Aquí va el texto que quieres resumir..."
 ```
 
-Verás los 4 niveles en pantalla, las **15 imágenes** en `diagramas/` y la **tabla Word** en `documentos/`. 📁
+Verás los 4 niveles en pantalla, las **17 imágenes** en `diagramas/` y la **tabla Word** en `documentos/`. 📁
 
 ### 3️⃣ (Opcional) Úsalo como servidor MCP
 
@@ -174,7 +176,7 @@ bun index.ts config --provider <openrouter|openai> [--url <url>] [--key <apikey>
 bun index.ts summarize "texto que quieres resumir"
 ```
 
-En pantalla verás los 4 niveles 🧠 y, después, las rutas de los 15 PNG en `diagramas/` 🖼️ y del documento en `documentos/` 📄.
+En pantalla verás los 4 niveles 🧠 y, después, las rutas de los 17 PNG en `diagramas/` 🖼️ y del documento en `documentos/` 📄.
 
 ¿Solo quieres el resumen sin archivos? Añade la opción `--solo-resumen` ✂️:
 
@@ -200,7 +202,7 @@ bun index.ts
 
 ## 🧪 Smoke test
 
-Comprueba que todo funciona sin gastar créditos del modelo: levanta un mock local de la API, renderiza los 15 diagramas y el documento, y valida el servidor MCP (tools, resumen y adjuntos en base64).
+Comprueba que todo funciona sin gastar créditos del modelo: levanta un mock local de la API, renderiza los 17 diagramas y el documento, y valida el servidor MCP (tools, resumen y adjuntos en base64).
 
 ```bash
 bun debug/smoke.ts
