@@ -385,9 +385,26 @@ Ejecuta el programa sin comandos y te mostrará cómo se usa:
 bun index.ts
 ```
 
+### 🏗️ Compilar el ejecutable
+
+```bash
+bun run build
+```
+
+Deja `dist/koala-cowork.exe` y copia a su lado `dist/icudtl.dat`, los datos que la librería de dibujo lee del disco para escribir texto: sin ese archivo, los diagramas fallan dentro del ejecutable. 🧷
+
+Con el ejecutable compilado los comandos son los mismos, sin `bun index.ts`:
+
+```bash
+./dist/koala-cowork.exe summarize "texto que quieres resumir"
+./dist/koala-cowork.exe mcp
+```
+
 ## 🧪 Smoke test
 
 Comprueba que todo funciona sin gastar créditos del modelo: levanta un mock local de la API, renderiza los 17 diagramas y el documento, arma las piezas de contenido (el JSON y su HTML) con el ejecutable real, y valida el servidor MCP (tools, resumen, contenido y adjuntos en base64).
+
+Si existe `dist/koala-cowork.exe`, el CLI y el MCP se prueban **con el ejecutable compilado** (`exe uso`, `exe summarize` y `mcp tools/list`); si no, se usa `bun index.ts`. La configuración del usuario se respalda en `debug/smoke-config-previo.json` y se restaura al terminar (también si cortas con Ctrl+C). ⛑️
 
 ```bash
 bun debug/smoke.ts
