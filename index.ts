@@ -19,7 +19,7 @@ class Cli {
     if (cmd === "summarize") return this.summarize(rest);
     if (cmd === "mcp") return new ServidorMcp().iniciar();
     console.log(
-      'Uso:\n  bun index.ts config --provider <openrouter|openai> [--url <url>] [--key <apikey>] [--model <modelo>]\n  bun index.ts summarize "texto a resumir" [--solo-resumen]\n  bun index.ts mcp',
+      'Uso:\n  koala-cowork config --provider <openrouter|openai> [--url <url>] [--key <apikey>] [--model <modelo>]\n  koala-cowork summarize "texto a resumir" [--solo-resumen]\n  koala-cowork mcp',
     );
   }
 
