@@ -33,3 +33,10 @@ Nuevo diagrama=nueva subclase en diagramas + registrar en Herramientas.renderers
 
 ## Ejecuci\u00f3n
 - Te ejcutas en wsl, pero yo desarollo (El proyecto esta en windows en la carpeta del proyecto) en windows
+
+## Compilación
+- Compilar SIEMPRE con `bun run build` (`scripts/compilar.ts`), nunca `bun build --compile` a mano: genera `dist/koala-cowork.exe` y además deja al lado los datos que Skia necesita
+- `bun build --compile` NO incluye `icudtl.dat`, los datos ICU que `@napi-rs/canvas` lee del disco en tiempo de ejecución; dentro del ejecutable `SkIcuLoader` no lo encuentra, falla `ParagraphBuilderImpl.cpp check(fUnicode)` y el proceso muere con `Illegal instruction` al dibujar texto (los diagramas PNG revientan, el resumen y los documentos siguen funcionando)
+- Solución: copiar `node_modules/@napi-rs/canvas-<plataforma>/icudtl.dat` junto al ejecutable (`dist/icudtl.dat`); ya lo hace `Compilar.datos()` en `scripts/compilar.ts`, que busca la carpeta de la plataforma dentro de `node_modules/@napi-rs`, así que no hay que fijar el nombre del paquete
+- Si el ejecutable falla al dibujar, revisar primero que exista `dist/icudtl.dat` y probarlo con `dist/koala-cowork.exe mcp` + la herramienta `diagrama_venn`
+- Smoke: `bun debug/smoke.ts` usa `dist/koala-cowork.exe` automáticamente si existe (pasos `exe uso`, `exe summarize` y el MCP con el binario); si no existe, prueba con `bun index.ts`
