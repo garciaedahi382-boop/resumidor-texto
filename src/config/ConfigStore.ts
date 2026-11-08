@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { OselotlConfig } from "./OselotlConfig";
 
 /**
  * Configuración persistida del proveedor y modelo de lenguaje.
@@ -26,10 +27,13 @@ export class ConfigStore {
   private static readonly FILE = join(ConfigStore.DIR, "modelr.json");
 
   /**
-   * Carga la configuración guardada.
-   * @returns Configuración leída o un objeto vacío si el archivo no existe.
+   * Carga la configuración guardada. Prefiere la configuración de modelos de
+   * Oselotl Cowork (`~/.oselotl/providers.json`); si no existe, usa el archivo propio.
+   * @returns Configuración leída o un objeto vacío si no hay ninguna.
    */
   static load(): ModelrConfig {
+    const oselotl = OselotlConfig.resolver();
+    if (oselotl) return oselotl;
     if (!existsSync(ConfigStore.FILE)) return {};
     return JSON.parse(readFileSync(ConfigStore.FILE, "utf8")) as ModelrConfig;
   }

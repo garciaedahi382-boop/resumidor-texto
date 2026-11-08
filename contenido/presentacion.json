@@ -1,0 +1,36 @@
+{
+  "secciones": [
+    {
+      "tipo": "resumen",
+      "titulo": "Contexto",
+      "texto": "Texto del contexto."
+    },
+    {
+      "tipo": "lista",
+      "titulo": "Puntos",
+      "elementos": [
+        "Uno",
+        [
+          "Sub uno",
+          [
+            "Sub dos"
+          ]
+        ],
+        "Dos"
+      ]
+    },
+    {
+      "tipo": "tabla",
+      "titulo": "Datos",
+      "celdas": {
+        "A1": "Nombre",
+        "B1": "Valor",
+        "A2": "x",
+        "B2": "1"
+      }
+    }
+  ],
+  "titulo": "Reforma educativa",
+  "subtitulo": "Resumen del periodo",
+  "pie": "Fuente de prueba"
+}

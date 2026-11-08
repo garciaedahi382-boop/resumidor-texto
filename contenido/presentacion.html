@@ -1,0 +1,220 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Reforma educativa</title><style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; overflow: hidden; }
+.deck { position: relative; min-height: 100dvh; }
+.progreso {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 4px;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+  z-index: 20;
+}
+.slide {
+  position: absolute;
+  inset: 0;
+  min-height: 100dvh;
+  padding: 2rem 1rem 7rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+}
+.slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s, visibility 0s;
+}
+.nav {
+  position: fixed;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  z-index: 20;
+}
+.nav__acciones { display: flex; gap: 0.5rem; align-items: center; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+@media print {
+  body { height: auto; overflow: visible; }
+  .slide { position: relative; opacity: 1; visibility: visible; min-height: 100vh; overflow: visible; break-after: page; }
+  .nav, .progreso { display: none; }
+}
+.progreso { background: var(--acento); }
+:root {
+  color-scheme: light dark;
+  --bg: #EDEEF0;
+  --celda: #F8F9FA;
+  --tinte: #F3DCE3;
+  --linea-c: #D9DCE1;
+  --acento: #B83A5E;
+  --sobre: #FBEFF3;
+  --ink: #17181C;
+  --ink-2: #4B4E57;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121316;
+    --celda: #1B1D22;
+    --tinte: #3A1D28;
+    --linea-c: #2A2D34;
+    --acento: #E0708F;
+    --sobre: #2A0F18;
+    --ink: #ECEDEF;
+    --ink-2: #A5A9B3;
+  }
+}
+
+body.bento-cuerpo {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Geist", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+.slide { justify-content: flex-start; padding: clamp(0.75rem, 3vh, 2rem) clamp(0.75rem, 3vw, 2rem) 7rem; }
+
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+  width: min(1200px, 100%);
+  margin: 0 auto;
+}
+
+.celda {
+  border-radius: 20px;
+  padding: clamp(1rem, 2.4vw, 2rem);
+  background: var(--celda);
+  border: 1px solid var(--linea-c);
+  overflow: hidden;
+}
+
+.celda--tinte { background: var(--tinte); border-color: transparent; }
+.celda--acento { background: var(--acento); color: var(--sobre); border-color: transparent; }
+.celda--imagen { padding: 0; min-height: 260px; }
+.celda--imagen img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.slide.is-active .celda { animation: aparece 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: calc(var(--n) * 70ms); }
+@keyframes aparece { from { opacity: 0; transform: scale(0.97); } }
+
+.c-titulo { grid-area: t; }
+.c-sub { grid-area: s; }
+.c-fecha { grid-area: d; }
+.c-img { grid-area: i; }
+.c-cuerpo { grid-area: c; }
+.c-lista { grid-area: l; }
+
+.bento--fi { grid-template-areas: "t t t t t t t t i i i i" "t t t t t t t t i i i i" "s s s s s d d d i i i i"; }
+.bento--i { grid-template-areas: "t t t t t t t t i i i i" "t t t t t t t t i i i i" "s s s s s s s s i i i i"; }
+.bento--f { grid-template-areas: "t t t t t t t t t t t t" "t t t t t t t t t t t t" "s s s s s s s s d d d d"; }
+.bento--n { grid-template-areas: "t t t t t t t t t t t t" "t t t t t t t t t t t t" "s s s s s s s s s s s s"; }
+.bento--resumen { grid-template-areas: "t t t t c c c c c c c c"; }
+.bento--lista { grid-template-areas: "t t t t t t t t t t t t" "l l l l l l l l l l l l"; }
+
+.titulo { margin: 0; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; font-size: clamp(1.9rem, 4vw, 3.4rem); }
+.bento--resumen .titulo, .bento--lista .titulo { font-size: clamp(1.4rem, 2.6vw, 2.2rem); }
+.subtitulo { margin: 0; color: var(--ink-2); font-size: clamp(1rem, 1.4vw, 1.2rem); }
+.fecha { margin: 0; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.cuerpo { margin: 0; font-size: clamp(1.25rem, 2.4vw, 2rem); letter-spacing: -0.02em; line-height: 1.3; }
+
+.lineas { list-style: none; margin: 0; padding: 0; column-count: 2; column-gap: clamp(1.5rem, 4vw, 3rem); font-size: clamp(1rem, 1.4vw, 1.2rem); }
+.linea { break-inside: avoid; margin-bottom: 1rem; }
+.sublineas { list-style: none; margin: 0.5rem 0 0; padding: 0 0 0 1.25rem; display: grid; gap: 0.35rem; color: var(--ink-2); font-size: 0.92em; }
+.vacio { margin: 0; color: var(--ink-2); }
+
+.contador { color: var(--ink-2); font-size: 0.85rem; }
+
+.boton {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--linea-c);
+  background: var(--celda);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.boton--principal { background: var(--acento); border-color: transparent; color: var(--sobre); }
+.boton:hover:not(:disabled) { transform: translateY(-1px); }
+.boton:active:not(:disabled) { transform: scale(0.98); }
+.boton:disabled { opacity: 0.4; cursor: default; }
+.boton:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
+
+@media (max-width: 767px) {
+  .bento { grid-template-areas: none; grid-template-columns: minmax(0, 1fr); }
+  .bento > .celda { grid-area: auto; }
+  .lineas { column-count: 1; }
+  .celda--imagen { min-height: 200px; }
+}
+</style></head><body class="bento-cuerpo"><div class="progreso" id="progreso"></div><main class="deck"><section class="slide"><div class="bento bento--i"><div class="celda celda--acento c-titulo" style="--n:0"><h1 class="titulo">Reforma educativa</h1></div><div class="celda c-sub" style="--n:1"><p class="subtitulo">Resumen del periodo</p></div><div class="celda celda--imagen c-img" style="--n:3"><img class="" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAwIDE1MDAiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI0I4QzRGMCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzZFNUJEMiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjE1MDAiIGZpbGw9InVybCgjZykiLz48Y2lyY2xlIGN4PSI4ODAiIGN5PSI0MjAiIHI9IjIzMCIgZmlsbD0iI0ZGRkZGRiIgZmlsbC1vcGFjaXR5PSIwLjI4Ii8+PHBhdGggZD0iTTAgMTE1MCBMMzMwIDc4MCBMNjIwIDEwNjAgTDg3MCA4NTAgTDEyMDAgMTE4MCBMMTIwMCAxNTAwIEwwIDE1MDAgWiIgZmlsbD0iIzNDNDJFMyIgZmlsbC1vcGFjaXR5PSIwLjU1Ii8+PHBhdGggZD0iTTAgMTMwMCBMNDAwIDEwMDAgTDc2MCAxMjgwIEwxMjAwIDEwNTAgTDEyMDAgMTUwMCBMMCAxNTAwIFoiIGZpbGw9IiMxQjFCMkYiIGZpbGwtb3BhY2l0eT0iMC40NSIvPjwvc3ZnPg==" alt="Imagen de ejemplo" fetchpriority="high" decoding="async"></div></div></section><section class="slide"><div class="bento bento--resumen"><div class="celda celda--acento c-titulo" style="--n:0"><h2 class="titulo">Contexto</h2></div><div class="celda c-cuerpo" style="--n:1"><p class="cuerpo">Texto del contexto.</p></div></div></section><section class="slide"><div class="bento bento--lista"><div class="celda celda--tinte c-titulo" style="--n:0"><h2 class="titulo">Puntos</h2></div><div class="celda c-lista" style="--n:1"><ul class="lineas"><li class="linea" style="--i:0">Uno<ul class="sublineas"><li>Sub uno</li><li>Sub dos</li></ul></li><li class="linea" style="--i:1">Dos</li></ul></div></div></section></main><nav class="nav" aria-label="Navegación de la presentación"><span class="contador" id="nav-contador" aria-live="polite"></span><div class="nav__acciones"><button class="boton" id="nav-previo" type="button">Anterior</button><button class="boton boton--principal" id="nav-siguiente" type="button">Siguiente</button></div></nav><script>
+(() => {
+  const diapositivas = Array.from(document.querySelectorAll('.slide'));
+  const previo = document.getElementById('nav-previo');
+  const siguiente = document.getElementById('nav-siguiente');
+  const contador = document.getElementById('nav-contador');
+  const progreso = document.getElementById('progreso');
+  let actual = 0;
+  let inicioToque = null;
+
+  const ir = (indice) => {
+    actual = Math.max(0, Math.min(diapositivas.length - 1, indice));
+    diapositivas.forEach((diapositiva, posicion) => {
+      const activa = posicion === actual;
+      diapositiva.classList.toggle('is-active', activa);
+      diapositiva.setAttribute('aria-hidden', String(!activa));
+      diapositiva.inert = !activa;
+    });
+    progreso.style.transform = 'scaleX(' + (actual + 1) / diapositivas.length + ')';
+    contador.textContent = (actual + 1) + ' de ' + diapositivas.length;
+    previo.disabled = actual === 0;
+    siguiente.disabled = actual === diapositivas.length - 1;
+    history.replaceState(null, '', '#' + (actual + 1));
+  };
+
+  previo.addEventListener('click', () => ir(actual - 1));
+  siguiente.addEventListener('click', () => ir(actual + 1));
+
+  document.addEventListener('keydown', (evento) => {
+    const acciones = {
+      ArrowRight: () => ir(actual + 1),
+      PageDown: () => ir(actual + 1),
+      ArrowLeft: () => ir(actual - 1),
+      PageUp: () => ir(actual - 1),
+      Home: () => ir(0),
+      End: () => ir(diapositivas.length - 1),
+    };
+    const accion = acciones[evento.key];
+    if (accion) {
+      evento.preventDefault();
+      accion();
+    }
+  });
+
+  document.addEventListener('touchstart', (evento) => {
+    inicioToque = evento.changedTouches[0].clientX;
+  }, { passive: true });
+
+  document.addEventListener('touchend', (evento) => {
+    if (inicioToque === null) return;
+    const desplazamiento = evento.changedTouches[0].clientX - inicioToque;
+    inicioToque = null;
+    if (Math.abs(desplazamiento) > 60) ir(actual + (desplazamiento < 0 ? 1 : -1));
+  }, { passive: true });
+
+  ir((parseInt(location.hash.slice(1), 10) || 1) - 1);
+})();
+</script></body></html>
