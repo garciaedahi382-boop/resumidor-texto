@@ -21,7 +21,7 @@ export class CtrlAgente {
     const nivelFinal = nivel && Number.isInteger(nivel) && nivel >= 1 && nivel <= 4 ? nivel : 1;
     try {
       if (!conDiagramas) {
-        const resumen = await KoalaAgente.getInstance().resumir(texto, nivelFinal);
+        const resumen = await KoalaAgente.getInstance().resumidor.resumir(texto, nivelFinal);
         res.json({ niveles: [`Nivel ${nivelFinal}: ${resumen}`], archivos: [] });
         return;
       }
@@ -47,7 +47,7 @@ export class CtrlAgente {
       return;
     }
     const efectivo = nivel ?? 1;
-    const resumen = await KoalaAgente.getInstance().resumir(texto, efectivo);
+    const resumen = await KoalaAgente.getInstance().resumidor.resumir(texto, efectivo);
     res.json({ nivel: efectivo, resumen });
   }
 
@@ -121,7 +121,7 @@ export class CtrlAgente {
       res.status(400).json({ error: `Tipo de ${clase} no soportado: ${tipo}`, tipos });
       return;
     }
-    const archivo = await agente.generar(tipo, texto);
+    const archivo = clase === "diagrama" ? await agente.diagramador.generar(tipo, texto) : await agente.documentador.generar(tipo, texto);
     res.sendFile(join(process.cwd(), archivo), { headers: { "Content-Disposition": `attachment; filename="${basename(archivo)}"` } });
   }
 }

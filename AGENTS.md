@@ -50,14 +50,15 @@ Herramienta: **Koala Cowork** (instrucciones en `~/.koalacowork`).
 `src/http/vistas/VistaConversaciones.ts`:Router GET/POST /api/conversaciones, GET/PATCH/DELETE /api/conversaciones/:id, POST /api/conversaciones/:id/mensajes->CtrlConversaciones
 `src/http/vistas/VistaAgente.ts`:Router POST /api/procesar|/resumen|/diagrama|/documento|/ejecutar, GET /download/*ruta->CtrlAgente
 `src/controladores/CtrlConversaciones.ts`:valida cuerpo/parametros y orquesta Historial+KoalaAgente.responder;calcularTitulo
-`src/controladores/CtrlAgente.ts`:valida entrada y llama KoalaAgente.resumir|procesar|generar;entregar(clase) envia PNG/DOCX;descargar
+`src/controladores/CtrlAgente.ts`:valida entrada y llama KoalaAgente.resumidor.resumir|procesar|diagramador.generar|documentador.generar;entregar(clase) envia PNG/DOCX;descargar
 `src/controladores/Peticion.ts`:leerCuerpo(req)/leerId(req)
 `src/modelos/Historial.ts`:modelo SQLite+Drizzle;crear/listar/obtener/renombrar/borrar/mensajesDe/agregar;sin validaciones
 
-`src/agente/KoalaAgente.ts`:singleton agente unificado Mastra;compone ModeloLlm+Resumidor+Diagramador+Documentador;registra sub-agentes+koala+workflow flujo-resumen(step resumir->then step diagrama-<tipo>->then step documento-<tipo>;si conDiagramas=falso se salta);delegar(diagramador,documentador)=tools diagrama_<tipo>/documento_<tipo>;api responder|procesar|resumir|generar;props tiposDiagrama|tiposDocumento
+`src/agente/KoalaAgente.ts`:singleton agente unificado Mastra;compone ModeloLlm+Resumidor+Diagramador+Documentador;registra sub-agentes+koala+workflow flujo-resumen(step resumir->then step diagrama-<tipo>->then step documento-<tipo>;si conDiagramas=falso se salta);agent koala orquesta subagentes(agents) sin tools ni metodos propios;api responder|procesar;subagentes publicos;props tiposDiagrama|tiposDocumento
+`src/agente/subagents/Compresor.ts`:proceso interno del resumidor;RESERVA=512;usa el Agent del resumidor;comprimir(texto)=si cabe lo devuelve,si no divide(limite-RESERVA) y encadena "Resumen previo:"
 `src/agente/ModeloLlm.ts`:static resolver(cfg)=proveedor/modelo(openai|openrouter)
 `src/agente/Contexto.ts`:static contarTokens/dividir;detectarLimite()=/models cacheado(fallback 8192)
-`src/agente/subagents/Resumidor.ts`:Agent resumidor;EXTENSIONES 4 niveles;resumir(nivel)|resumirNiveles();si>contexto fragmenta via resumirTexto/dividir
+`src/agente/subagents/Resumidor.ts`:Agent resumidor;EXTENSIONES 4 niveles;tool resumir(comprime);resumir(nivel)|resumirNiveles()
 `src/agente/subagents/Diagramador.ts`:Agent diagramador;static RENDERERS=Registro{17},tool renderizar_diagrama;generar(tipo,texto)=Archivos.preparar(calcularRuta)+prompt(DiagramRenderer.prompt)+generate+verificar
 `src/agente/subagents/Documentador.ts`:Agent documentador;static DOCUMENTOS=Registro{1},tool renderizar_documento;generar(tipo,texto)=igual con prompt(...,"renderizar_documento")->documentos/<tipo>.docx
 

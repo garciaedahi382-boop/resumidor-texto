@@ -19,42 +19,49 @@ Dependencias externas que este módulo solo consume: `ConfigStore` (configuraci�
 |---|---|
 | `getInstance()` | Crea (una sola vez por proceso) la instancia con la configuración de `ConfigStore`. |
 | `mastra` | Contenedor de Mastra con los 3 subagentes, el agente `koala` y el workflow registrados. |
-| `agent` | Agente `koala`, el que responde el chat y decide qué herramienta llamar. |
+| `agent` | Agente `koala`, el que responde el chat orquestando a los subagentes y tomando sus resultados. |
 | `tiposDiagrama` / `tiposDocumento` | Listas de tipos válidos, tomadas de los registros; sirven para validar entradas HTTP. |
+| `resumidor` / `diagramador` / `documentador` | Subagentes expuestos para que el controlador pida el trabajo concreto. |
 | `responder(mensajes)` | Contesta el chat recortando el historial a la ventana del modelo. |
 | `procesar(texto, conDiagramas)` | Corre el workflow completo y devuelve niveles + archivos. |
-| `resumir(texto, nivel)` | Un solo nivel, sin pasar por el workflow. |
-| `generar(tipo, texto)` | Un solo archivo, eligiendo subagente según el registro al que pertenezca el tipo. |
 | `armarFlujo(agente)` (privado) | Construye los steps del workflow a partir de los registros. |
-| `delegar(...)` (privado) | Crea una tool por tipo para que el chat pueda pedir archivos. |
-| `INSTRUCCIONES` (privado) | Prompt del agente `koala`: cómo resumir y cómo llamar las tools. |
+| `INSTRUCCIONES` (privado) | Prompt del agente `koala`: qué subagente atiende cada pedido. |
 
 Comportamiento:
 
 - `responder` descarta mensajes desde el inicio hasta que el total quepa en `detectarLimite() - 512`; conserva al menos el último. La respuesta es `agent.generate(...).text`.
+- `agent` declara `agents` con los 3 subagentes: no crea tools propias, solo los orquesta y toma sus resultados.
 - `procesar` devuelve `resultado.result` si `status === "success"`; si `failed` lanza `"El flujo falló: ..."`; cualquier otro estado lanza `"El flujo terminó con estado: ..."`.
-- `resumir` delega en `Resumidor.resumir`; nivel fuera de `1..4` lanza `"El nivel debe estar entre 1 y 4"`.
-- `generar` usa `Diagramador.generar` si el tipo está en `tiposDiagrama`; si no, `Documentador.generar`. Propaga `"Tipo no soportado: <tipo>"` y `"El agente no generó el diagrama|documento <tipo>"`.
+- `resumir` del `Resumidor` comprime internamente; nivel fuera de `1..4` lanza `"El nivel debe estar entre 1 y 4"`.
+- `diagramador.generar` y `documentador.generar` propagan `"Tipo no soportado: <tipo>"` y `"El agente no generó el diagrama|documento <tipo>"`.
 
 ## `subagents/Resumidor.ts`
 
-Produce los 4 niveles de resumen y resuelve los textos que no caben en el contexto del modelo.
+Produce los 4 niveles de resumen; su tool `resumir` comprime internamente los textos que no caben en el contexto.
+
+| Miembro | Para qué sirve |
+|---|---|
+| `EXTENSIONES` | Una instrucción por nivel (detallado → síntesis); define la extensión esperada. |
+| `instancia` | Expone el `Agent` de Mastra para registrarlo. |
+| `crearHerramienta(resumidor)` (privado) | Tool `resumir`: recibe `{ texto, nivel }`, comprime si hace falta y devuelve el resumen. Es la tool propia del agente. |
+| `resumir(texto, nivel)` | Comprime el texto y redacta un nivel. |
+| `resumirNiveles(texto)` | Comprime una vez y redacta los 4 niveles sobre esa fuente. |
+| `redactar(texto, nivel)` (privado) | Una llamada al modelo para un nivel ya comprimido. |
+
+Comportamiento:
+
+- Cada nivel se genera desde la misma fuente (no uno del otro) para que ninguno pierda información.
+- El compresor vive dentro del resumidor: el agente no decide cuándo corre.
+- `redactar` llama al modelo con `toolChoice: "none"` para que responda el resumen en lugar de volver a invocar la tool.
+
+## `subagents/Compresor.ts`
+
+Proceso interno del agente resumidor: reduce un texto que excede la ventana del modelo para que su tool `resumir` reciba una fuente que sí cabe. No es un agente registrado: usa el `Agent` del resumidor solo para sus llamadas.
 
 | Miembro | Para qué sirve |
 |---|---|
 | `RESERVA` | Tokens que se apartan al fragmentar, para la instrucción y el resumen previo. |
-| `EXTENSIONES` | Una instrucción por nivel (detallado → síntesis); define la extensión esperada. |
-| `instancia` | Expone el `Agent` de Mastra para registrarlo. |
-| `resumir(texto, nivel)` | Un nivel con una sola llamada al modelo. |
-| `resumirNiveles(texto)` | Los 4 niveles, en serie, sobre la misma fuente. |
-| `resumirCon(instrucciones, texto)` (privado) | Aplica varias instrucciones a una misma fuente ya normalizada. |
-| `resumirTexto(texto)` (privado) | Reduce un texto que excede el contexto encadenando fragmentos. |
-
-Comportamiento:
-
-- `resumirCon` comprueba `contarTokens(texto) < detectarLimite()`; si no cabe, primero comprime con `resumirTexto`, así todos los niveles parten de la misma fuente.
-- `resumirTexto` divide con `dividir(texto, limite - RESERVA)` y arrastra `"Resumen previo: ..."` entre fragmentos; devuelve el último.
-- Todos los niveles se generan desde el texto completo (no uno del otro) para que ninguno pierda información.
+| `comprimir(texto)` | Devuelve el texto igual si cabe en el contexto; si no, divide con `dividir(texto, limite - RESERVA)`, encadena `"Resumen previo: ..."` entre fragmentos y devuelve el último. |
 
 ## `subagents/Diagramador.ts`
 
@@ -82,7 +89,7 @@ Traduce la configuración persistida (`provider`, `url`, `apiKey`, `model`) al o
 
 ## `Contexto.ts`
 
-Mide y reparte texto según la ventana del modelo; lo usan `KoalaAgente` y `Resumidor`.
+Mide y reparte texto según la ventana del modelo; lo usa el `Compresor` del resumidor.
 
 | Miembro | Para qué sirve |
 |---|---|
@@ -97,9 +104,9 @@ Encadena resumen y generación de archivos sin pasar por el LLM del chat: cada s
 
 ```
 EsquemaEntrada
- ├─ "resumir"           Resumidor.resumirNiveles  → llena niveles
- ├─ "diagrama-<tipo>"   Diagramador.generar       ×17  (usa niveles[0])
- └─ "documento-<tipo>"  Documentador.generar      ×1   (usa niveles[0])
+ ├─ "resumir"           Resumidor.resumirNiveles    → llena niveles
+ ├─ "diagrama-<tipo>"   Diagramador.generar         ×17  (usa niveles[0])
+ └─ "documento-<tipo>"  Documentador.generar        ×1   (usa niveles[0])
 EsquemaResumen
 ```
 

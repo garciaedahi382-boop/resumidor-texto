@@ -1,18 +1,16 @@
 import { Agent } from "@mastra/core/agent";
-import { Contexto } from "../Contexto";
+import { createTool } from "@mastra/core/tools";
+import { z } from "zod";
 import type { Modelo } from "../ModeloLlm";
+import { Compresor } from "./Compresor";
 
 /**
- * Genera los 4 niveles de resumen y fragmenta el texto si no cabe en el contexto.
+ * Genera los 4 niveles de resumen a partir de un texto que ya cabe en el contexto.
  */
 export class Resumidor {
-  /** Margen de tokens reservado a la instrucción y al resumen previo al fragmentar. */
-  private static readonly RESERVA = 512;
-
   /**
    * Cada nivel se genera desde el texto fuente con su propio objetivo de extensión,
-   * así todos toman toda la información. Solo si el texto no cabe en el contexto
-   * (se fragmentó), los niveles se derivan del resumen por fragmentos ya completo.
+   * así todos toman toda la información.
    */
   private static readonly EXTENSIONES = [
     "Resume el siguiente texto de forma detallada:",
@@ -23,8 +21,8 @@ export class Resumidor {
 
   /** Agente de Mastra que ejecuta las llamadas al modelo. */
   private readonly agente: Agent;
-  /** Ventana de contexto del modelo configurado. */
-  private readonly contexto = new Contexto();
+  /** Compresor interno que ajusta el texto a la ventana del modelo. */
+  private readonly compresor: Compresor;
 
   /**
    * @param model Configuración de modelo resuelta por `ModeloLlm`.
@@ -35,8 +33,9 @@ export class Resumidor {
       name: "resumidor",
       instructions: "Eres un resumidor de textos. Responde únicamente con el resumen del texto recibido, sin saludos, prefacios, despedidas ni explicaciones adicionales.",
       model,
-      skills: [],
+      tools: { resumir: Resumidor.crearHerramienta(this) },
     });
+    this.compresor = new Compresor(this.agente);
   }
 
   /** Agente subyacente, para registrarlo en `Mastra`. */
@@ -45,59 +44,55 @@ export class Resumidor {
   }
 
   /**
-   * Un solo nivel (1..4): una única llamada al modelo.
+   * Crea la herramienta Mastra que resume un texto en un nivel.
+   * @param resumidor Instancia que ejecuta la llamada al modelo.
+   * @returns Herramienta `resumir` con entrada `{ texto, nivel }`.
+   */
+  private static crearHerramienta(resumidor: Resumidor) {
+    return createTool({
+      id: "resumir",
+      description: "Resume un texto en el nivel pedido (1 detallado, 2 medio, 3 breve, 4 síntesis) y devuelve el resumen.",
+      inputSchema: z.object({
+        texto: z.string().describe("Texto que se va a resumir"),
+        nivel: z.number().int().min(1).max(4).optional().describe("Nivel de detalle, entre 1 y 4; por defecto 1"),
+      }),
+      execute: async ({ texto, nivel }) => ({ resumen: await resumidor.resumir(texto, nivel ?? 1) }),
+    });
+  }
+
+  /**
+   * Un solo nivel (1..4): comprime el texto y hace una única llamada al modelo.
    * @param texto Texto a resumir.
    * @param nivel Nivel de resumen, entre 1 (detallado) y 4 (síntesis).
    * @returns Resumen del nivel pedido.
    * @throws Error si el nivel está fuera de 1..4.
    */
   async resumir(texto: string, nivel: number): Promise<string> {
-    const instruccion = Resumidor.EXTENSIONES[nivel - 1];
-    if (!instruccion) throw new Error("El nivel debe estar entre 1 y 4");
-    return (await this.resumirCon([instruccion], texto))[0]!;
+    return this.redactar(await this.compresor.comprimir(texto), nivel);
   }
 
   /**
-   * Genera los 4 niveles de resumen en orden.
+   * Genera los 4 niveles de resumen en orden sobre la misma fuente comprimida.
    * @param texto Texto a resumir.
    * @returns Tupla con los niveles 1 a 4.
    */
   async resumirNiveles(texto: string): Promise<[string, string, string, string]> {
-    const niveles = await this.resumirCon(Resumidor.EXTENSIONES, texto);
-    return [niveles[0]!, niveles[1]!, niveles[2]!, niveles[3]!];
-  }
-
-  /**
-   * Aplica una instrucción por cada nivel sobre una única fuente.
-   * @param instrucciones Instrucciones de resumen a ejecutar.
-   * @param texto Texto original.
-   * @returns Resúmenes en el mismo orden que las instrucciones.
-   */
-  private async resumirCon(instrucciones: string[], texto: string): Promise<string[]> {
-    const limite = await this.contexto.detectarLimite();
-    const fuente = Contexto.contarTokens(texto) < limite ? texto : await this.resumirTexto(texto);
+    const fuente = await this.compresor.comprimir(texto);
     const salida: string[] = [];
-    for (const instruccion of instrucciones) {
-      salida.push((await this.agente.generate(`${instruccion}\n\n${fuente}`)).text.trim());
-    }
-    return salida;
+    for (const nivel of [1, 2, 3, 4]) salida.push(await this.redactar(fuente, nivel));
+    return [salida[0]!, salida[1]!, salida[2]!, salida[3]!];
   }
 
   /**
-   * Resume un texto que excede el contexto, encadenando fragmentos con el resumen previo.
-   * @param texto Texto original.
-   * @returns Resumen acumulado del último fragmento.
+   * Redacta un nivel a partir de un texto que ya cabe en el contexto.
+   * @param texto Texto comprimido.
+   * @param nivel Nivel de resumen, entre 1 y 4.
+   * @returns Resumen del nivel pedido.
+   * @throws Error si el nivel está fuera de 1..4.
    */
-  private async resumirTexto(texto: string): Promise<string> {
-    const limite = await this.contexto.detectarLimite();
-    if (Contexto.contarTokens(texto) < limite) {
-      return (await this.agente.generate(texto)).text.trim();
-    }
-    const acarreo: string[] = [];
-    for (const trozo of Contexto.dividir(texto, limite - Resumidor.RESERVA)) {
-      const previo = acarreo.length > 0 ? `Resumen previo: ${acarreo[acarreo.length - 1]}\n\n` : "";
-      acarreo.push((await this.agente.generate(`${previo}Continúa el resumen con el siguiente fragmento:\n${trozo}`)).text.trim());
-    }
-    return acarreo[acarreo.length - 1] ?? "";
+  private async redactar(texto: string, nivel: number): Promise<string> {
+    const instruccion = Resumidor.EXTENSIONES[nivel - 1];
+    if (!instruccion) throw new Error("El nivel debe estar entre 1 y 4");
+    return (await this.agente.generate(`${instruccion}\n\n${texto}`, { toolChoice: "none" })).text.trim();
   }
 }

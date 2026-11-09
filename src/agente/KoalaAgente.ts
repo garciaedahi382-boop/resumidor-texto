@@ -1,6 +1,5 @@
 import { Mastra } from "@mastra/core/mastra";
-import { Agent, type ToolsInput } from "@mastra/core/agent";
-import { createTool } from "@mastra/core/tools";
+import { Agent } from "@mastra/core/agent";
 import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
 import { ConfigStore } from "../config/ConfigStore";
@@ -32,21 +31,22 @@ export class KoalaAgente {
   /** Ventana de contexto del modelo para recortar el historial de chat. */
   private readonly contexto = new Contexto();
 
-  /** Instrucciones del chat: resumir en la conversación y generar archivos con herramientas. */
+  /** Instrucciones del chat: orquesta los subagentes y toma sus resultados. */
   private static readonly INSTRUCCIONES = [
     "Eres Koala Cowork, un asistente de análisis de textos dentro de una conversación continua.",
-    "Resumes los textos directamente en tu respuesta usando markdown; si piden varios niveles de detalle usa: 1 (detallado), 2 (medio), 3 (breve) y 4 (síntesis).",
-    `Para generar archivos llama las herramientas: diagrama_<tipo> para diagramas PNG (tipos: ${Diagramador.RENDERERS.tipos.join(", ")}) y documento_<tipo> para documentos DOCX (tipos: ${Documentador.DOCUMENTOS.tipos.join(", ")}). Pásales el texto relevante y menciona en tu respuesta la ruta del archivo generado.`,
+    "Orquestas a tus subagentes y tomas sus resultados: el resumidor resume textos; el diagramador genera un PNG del tipo que le pidas; el documentador genera un DOCX del tipo que le pidas.",
+    `Tipos de diagrama disponibles: ${Diagramador.RENDERERS.tipos.join(", ")}. Tipos de documento disponibles: ${Documentador.DOCUMENTOS.tipos.join(", ")}.`,
+    "Para un resumen, pídeselo al resumidor indicando el nivel (1 detallado, 2 medio, 3 breve, 4 síntesis); para un archivo, al diagramador o al documentador con el texto y el tipo.",
     "Si el usuario se refiere a texto o archivos anteriores de la conversación, úsalos directamente sin pedir que los repita.",
     "Responde en el idioma del usuario y sé directo.",
   ].join("\n");
 
   /** Agente responsable de los 4 niveles de resumen. */
-  private readonly resumidor: Resumidor;
+  readonly resumidor: Resumidor;
   /** Agente responsable de los diagramas. */
-  private readonly diagramador: Diagramador;
+  readonly diagramador: Diagramador;
   /** Agente responsable de los documentos. */
-  private readonly documentador: Documentador;
+  readonly documentador: Documentador;
 
   /** Instancia de Mastra con todos los agentes y el workflow registrados. */
   readonly mastra: Mastra;
@@ -72,7 +72,11 @@ export class KoalaAgente {
           name: "Koala Cowork",
           instructions: KoalaAgente.INSTRUCCIONES,
           model,
-          tools: KoalaAgente.delegar(this.diagramador, this.documentador),
+          agents: {
+            resumidor: this.resumidor.instancia,
+            diagramador: this.diagramador.instancia,
+            documentador: this.documentador.instancia,
+          },
         }),
       },
       workflows: { "flujo-resumen": KoalaAgente.armarFlujo(this).commit() },
@@ -122,34 +126,6 @@ export class KoalaAgente {
   }
 
   /**
-   * Crea las herramientas del chat: una por cada tipo de diagrama y documento,
-   * con entrada `{ texto }`, que delegan en los sub-agentes.
-   * @param diagramador Subagente de diagramas.
-   * @param documentador Subagente de documentos.
-   * @returns Herramientas `diagrama_<tipo>` y `documento_<tipo>`.
-   */
-  private static delegar(diagramador: Diagramador, documentador: Documentador): ToolsInput {
-    const herramientas: ToolsInput = {};
-    for (const tipo of Diagramador.RENDERERS.tipos) {
-      herramientas[`diagrama_${tipo}`] = createTool({
-        id: `diagrama_${tipo}`,
-        description: `Genera un diagrama ${tipo} (PNG) a partir del texto y devuelve la ruta del archivo.`,
-        inputSchema: z.object({ texto: z.string().describe("Texto del que se extraen los datos del diagrama") }),
-        execute: async ({ texto }) => ({ archivo: await diagramador.generar(tipo, texto) }),
-      });
-    }
-    for (const tipo of Documentador.DOCUMENTOS.tipos) {
-      herramientas[`documento_${tipo}`] = createTool({
-        id: `documento_${tipo}`,
-        description: `Genera el documento ${tipo} (DOCX) a partir del texto y devuelve la ruta del archivo.`,
-        inputSchema: z.object({ texto: z.string().describe("Texto del que se extraen los datos del documento") }),
-        execute: async ({ texto }) => ({ archivo: await documentador.generar(tipo, texto) }),
-      });
-    }
-    return herramientas;
-  }
-
-  /**
    * Devuelve la instancia única del agente unificado.
    * @returns Instancia de KoalaAgente.
    */
@@ -186,25 +162,5 @@ export class KoalaAgente {
     if (resultado.status === "success") return resultado.result;
     if (resultado.status === "failed") throw new Error(`El flujo falló: ${resultado.error.message}`);
     throw new Error(`El flujo terminó con estado: ${resultado.status}`);
-  }
-
-  /**
-   * Genera un único nivel de resumen.
-   * @param texto Texto a resumir.
-   * @param nivel Nivel entre 1 y 4.
-   * @returns Resumen del nivel pedido.
-   */
-  async resumir(texto: string, nivel: number): Promise<string> {
-    return this.resumidor.resumir(texto, nivel);
-  }
-
-  /**
-   * Genera el archivo de un tipo de diagrama o documento.
-   * @param tipo Tipo registrado como diagrama o documento.
-   * @param texto Texto del que se extraen los datos.
-   * @returns Ruta del archivo generado.
-   */
-  async generar(tipo: string, texto: string): Promise<string> {
-    return this.tiposDiagrama.includes(tipo) ? this.diagramador.generar(tipo, texto) : this.documentador.generar(tipo, texto);
   }
 }
