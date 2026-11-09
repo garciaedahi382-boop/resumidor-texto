@@ -10,7 +10,7 @@ export class ModeloLlm {
    * @returns Configuración del modelo para `openai` u `openrouter`.
    * @throws Error si falta configuración obligatoria del proveedor.
    */
-  static configuracion(cfg: ModelrConfig) {
+  static resolver(cfg: ModelrConfig) {
     if (cfg.provider === "openai") {
       if (!cfg.url || !cfg.apiKey || !cfg.model) {
         throw new Error('Configura el proveedor openai: config --provider openai --url <url> --key <apikey> --model <modelo>');
@@ -23,6 +23,6 @@ export class ModeloLlm {
 }
 
 /**
- * Configuración de modelo producida por {@link ModeloLlm.configuracion}.
+ * Configuración de modelo producida por {@link ModeloLlm.resolver}.
  */
-export type Modelo = ReturnType<typeof ModeloLlm.configuracion>;
+export type Modelo = ReturnType<typeof ModeloLlm.resolver>;

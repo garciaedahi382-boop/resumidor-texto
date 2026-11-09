@@ -15,7 +15,7 @@ export class Contexto {
    * @param texto Texto a medir.
    * @returns Tokens estimados (4 caracteres por token).
    */
-  static tokens(texto: string): number {
+  static contarTokens(texto: string): number {
     return Math.ceil(texto.length / 4);
   }
 
@@ -34,14 +34,14 @@ export class Contexto {
       actual = "";
     };
     for (const palabra of texto.split(/\s+/)) {
-      if (Contexto.tokens(palabra) > presupuesto) {
+      if (Contexto.contarTokens(palabra) > presupuesto) {
         empujar();
         const tamano = presupuesto * 4;
         for (let i = 0; i < palabra.length; i += tamano) trozos.push(palabra.slice(i, i + tamano));
         continue;
       }
       const candidato = actual ? `${actual} ${palabra}` : palabra;
-      if (actual && Contexto.tokens(candidato) > presupuesto) {
+      if (actual && Contexto.contarTokens(candidato) > presupuesto) {
         empujar();
         actual = palabra;
       } else {
@@ -56,7 +56,7 @@ export class Contexto {
    * Consulta la ventana de contexto del modelo configurado en `/models` y la cachea.
    * @returns Tokens de contexto disponibles, o {@link Contexto.DEFECTO} si la consulta falla.
    */
-  async limite(): Promise<number> {
+  async detectarLimite(): Promise<number> {
     if (this.limiteTokens > 0) return this.limiteTokens;
     const cfg = ConfigStore.load();
     const base = cfg.provider === "openai" ? cfg.url! : "https://openrouter.ai/api/v1";

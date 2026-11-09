@@ -1,7 +1,6 @@
 import { Agent } from "@mastra/core/agent";
-import { SkillsStore } from "../skills/SkillsStore";
-import { Contexto } from "./Contexto";
-import type { Modelo } from "./ModeloLlm";
+import { Contexto } from "../Contexto";
+import type { Modelo } from "../ModeloLlm";
 
 /**
  * Genera los 4 niveles de resumen y fragmenta el texto si no cabe en el contexto.
@@ -36,8 +35,7 @@ export class Resumidor {
       name: "resumidor",
       instructions: "Eres un resumidor de textos. Responde únicamente con el resumen del texto recibido, sin saludos, prefacios, despedidas ni explicaciones adicionales.",
       model,
-      skills: [SkillsStore.DIR],
-      tools: { escribir_skill: SkillsStore.herramienta() },
+      skills: [],
     });
   }
 
@@ -64,7 +62,7 @@ export class Resumidor {
    * @param texto Texto a resumir.
    * @returns Tupla con los niveles 1 a 4.
    */
-  async niveles(texto: string): Promise<[string, string, string, string]> {
+  async resumirNiveles(texto: string): Promise<[string, string, string, string]> {
     const niveles = await this.resumirCon(Resumidor.EXTENSIONES, texto);
     return [niveles[0]!, niveles[1]!, niveles[2]!, niveles[3]!];
   }
@@ -76,8 +74,8 @@ export class Resumidor {
    * @returns Resúmenes en el mismo orden que las instrucciones.
    */
   private async resumirCon(instrucciones: string[], texto: string): Promise<string[]> {
-    const limite = await this.contexto.limite();
-    const fuente = Contexto.tokens(texto) < limite ? texto : await this.resumirTexto(texto);
+    const limite = await this.contexto.detectarLimite();
+    const fuente = Contexto.contarTokens(texto) < limite ? texto : await this.resumirTexto(texto);
     const salida: string[] = [];
     for (const instruccion of instrucciones) {
       salida.push((await this.agente.generate(`${instruccion}\n\n${fuente}`)).text.trim());
@@ -91,8 +89,8 @@ export class Resumidor {
    * @returns Resumen acumulado del último fragmento.
    */
   private async resumirTexto(texto: string): Promise<string> {
-    const limite = await this.contexto.limite();
-    if (Contexto.tokens(texto) < limite) {
+    const limite = await this.contexto.detectarLimite();
+    if (Contexto.contarTokens(texto) < limite) {
       return (await this.agente.generate(texto)).text.trim();
     }
     const acarreo: string[] = [];
