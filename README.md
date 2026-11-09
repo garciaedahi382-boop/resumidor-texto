@@ -4,11 +4,10 @@
 
 ### El koala que no suelta el texto hasta exprimirlo
 
-De un texto largo a **4 niveles de resumen**, **17 diagramas PNG**, **documentos Word** y el **JSON de contenido** de infografías y presentaciones. Todo con una sola herramienta: por tu **línea de comandos** o como **servidor MCP**. 🚀
+De un texto largo a **4 niveles de resumen**, **17 diagramas PNG**, **documentos Word** y el **JSON de contenido** de infografías y presentaciones. Todo con una sola herramienta desde tu **línea de comandos**. 🚀
 
 ![Bun](https://img.shields.io/badge/Bun-runtime-000000?logo=bun&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-tipado-3178C6?logo=typescript&logoColor=white)
-![MCP](https://img.shields.io/badge/MCP-stdio-6E56CF)
 ![Salidas](https://img.shields.io/badge/salidas-PNG%20%C2%B7%20DOCX%20%C2%B7%20JSON-2F9E44)
 ![Skills](https://img.shields.io/badge/skills-propias-F59F00)
 
@@ -21,7 +20,7 @@ De un texto largo a **4 niveles de resumen**, **17 diagramas PNG**, **documentos
 | Elemento | Qué representa |
 | --- | --- |
 | 🐨 **Koala** | Trabajo paciente y completo: el texto se lee entero y nunca se pierde la mitad del camino |
-| 🤝 **Cowork** | Trabaja contigo: la CLI es para ti, el servidor MCP para tu agente |
+| 🤝 **Cowork** | Trabaja contigo: tú le das el texto y él entrega el paquete completo |
 | 🧾 **Paquete completo** | Un texto entra, sale resumen + diagramas + documentos + JSON de contenido |
 | 🗣️ **Voz de marca** | Español claro, cercano y sin jerga; las cifras y fechas se conservan tal cual |
 | 🧠 **Skills propias** | Tú pones las reglas con skills en `~/.koalacowork`; el koala las respeta |
@@ -34,7 +33,7 @@ De un texto largo a **4 niveles de resumen**, **17 diagramas PNG**, **documentos
 4. 📄 Y como **documentos Word** (tablas) con la misma información
 5. 🧾 Y entrega el **JSON de contenido** de una infografía o una presentación, con el diseño elegido por nombre
 
-Todo se puede usar desde la **línea de comandos** o como **servidor MCP** para que lo consuma un agente externo. 🤖
+Todo se usa desde la **línea de comandos**. 🤖
 
 ### 🎯 Los tres sellos del koala
 
@@ -61,12 +60,10 @@ El resumen no se queda en texto: sale en cuatro formatos. 📤
 
 | Formato | Qué entrega | Cómo se obtiene |
 |---------|-------------|-----------------|
-| 📝 Texto | Los 4 niveles (detallado → síntesis) | Pantalla con `summarize` o herramienta MCP `resumir` |
-| 🖼️ Imagen PNG | Los 17 diagramas | Archivos en `diagramas/` o herramientas `diagrama_<tipo>` |
-| 📄 Word DOCX | Las tablas de análisis | Archivo en `documentos/` o herramienta `documento_<tipo>` |
+| 📝 Texto | Los 4 niveles (detallado → síntesis) | Pantalla con `summarize` |
+| 🖼️ Imagen PNG | Los 17 diagramas | Archivos en `diagramas/` |
+| 📄 Word DOCX | Las tablas de análisis | Archivo en `documentos/` |
 | 🧾 JSON | La entrada de contenido de infografía o presentación | Archivo en `contenido/<pieza>.json` o herramientas `infografia` / `presentacion` |
-
-Por MCP, los archivos vuelven **embebidos en base64** (imagen o recurso), así el agente que consulta recibe el contenido sin depender del disco. 🔐
 
 El JSON también es un **formato abierto**: cualquier herramienta personalizada que respete sus claves puede consumirlo (ver más abajo, *Para herramientas propias*). 🧰
 
@@ -180,7 +177,7 @@ Cada nivel se crea leyendo **el texto completo**, solo cambia el grado de conden
 | 🧠 `Resumidor` | Genera los 4 niveles y aplica las skills del usuario |
 | 🎨 `Diagramador` | Genera los diagramas PNG |
 | 📄 `Documentador` | Genera los documentos Word |
-| 🎛️ `AgenteResumen` | Orquesta el flujo: resumir → diagramar → documentar |
+| 🎛️ `KoalaAgente` | Orquesta el flujo: resumir → generar diagramas → generar documentos |
 
 Cada pieza tiene un único trabajo, y el flujo se ejecuta de principio a fin con un solo comando.
 
@@ -276,7 +273,7 @@ Las skills se **releen en cada ejecución**, así que puedes editarlas a mano o 
 
 ## 🚀 Empezar
 
-> 🐨 En **tres pasos**: configura el proveedor, deja que el koala resuma, y (si quieres) conéctalo a tu agente por MCP.
+> 🐨 En **dos pasos**: configura el proveedor y deja que el koala resuma.
 
 ### 1️⃣ Configura tu proveedor
 
@@ -302,43 +299,9 @@ bun index.ts summarize "Aquí va el texto que quieres resumir..."
 
 Verás los 4 niveles en pantalla, las **17 imágenes** en `diagramas/` y la **tabla Word** en `documentos/`. 📁
 
-### 3️⃣ (Opcional) Úsalo como servidor MCP
-
-```bash
-bun index.ts mcp
-```
-
-Habla **MCP sobre stdio**, así que cualquier cliente compatible puede lanzarlo y usar sus herramientas. Por ejemplo:
-
-```json
-{
-  "mcpServers": {
-    "koala-cowork": {
-      "command": "bun",
-      "args": ["index.ts", "mcp"],
-      "cwd": "/ruta/a/koala-cowork"
-    }
-  }
-}
-```
-
-## 🔌 Herramientas MCP
-
-| Herramienta | Argumentos | Devuelve |
-|-------------|------------|----------|
-| 🧠 `resumir` | `texto`, `nivel` (1–4) | El resumen del nivel pedido |
-| 🎨 `diagrama_<tipo>` | `texto` | Ruta + imagen PNG en **base64** |
-| 📄 `documento_<tipo>` | `texto` | Ruta + DOCX en **base64** como recurso |
-| 🧾 `infografia` | `diseno`, `titulo`, `subtitulo`, `pie`, `secciones` | Ruta del **JSON** de entrada + HTML como recurso |
-| 🧾 `presentacion` | `diseno`, `titulo`, `subtitulo`, `secciones` | Ruta del **JSON** de entrada + HTML como recurso |
-
-Los nombres usan guiones bajos: `ishikawa` → `diagrama_ishikawa`, `cuadro-sinoptico` → `diagrama_cuadro_sinoptico`, `tabla-cambios` → `documento_tabla_cambios`. 🔤
-
-Cada herramienta hace **una sola llamada al modelo** para el tipo pedido, así que no necesitas generar todo el paquete si solo quieres un diagrama. ⚡
-
 ## 🖥️ La línea de comandos
 
-El programa tiene tres comandos: `config` (⚙️ configurar), `summarize` (📝 resumir) y `mcp` (🔌 servidor).
+El programa tiene tres comandos: `config` (⚙️ configurar), `summarize` (📝 resumir) y `serve` (🔌 servidor HTTP).
 
 ### ⚙️ `config` — preparar tu proveedor
 
@@ -369,13 +332,20 @@ En pantalla verás los 4 niveles 🧠 y, después, las rutas de los 17 PNG en `d
 bun index.ts summarize --solo-resumen "texto que quieres resumir"
 ```
 
-### 🔌 `mcp` — servidor para agentes
+### 🔌 `serve` — servidor HTTP del agente
 
 ```bash
-bun index.ts mcp
+bun index.ts serve [--puerto <puerto>]
 ```
 
-Arranca el servidor MCP sobre stdio. No imprime nada: espera peticiones del cliente que lo lanzó. 🤐
+Arranca un servidor Express con los endpoints del agente (puerto 3000 por defecto). Todos reciben JSON; los archivos se devuelven como descarga. 📥
+
+| Endpoint | Cuerpo | Devuelve |
+|----------|--------|----------|
+| 📝 `POST /resumen` | `texto`, `nivel` (1–4, opcional) | `{ nivel, resumen }` |
+| 🖼️ `POST /diagrama` | `tipo`, `texto` | El PNG como descarga |
+| 📄 `POST /documento` | `tipo`, `texto` | El DOCX como descarga |
+| 📦 `POST /ejecutar` | `texto`, `conDiagramas` (opcional) | `{ niveles, archivos }` del flujo completo |
 
 ### 🧭 Si te pierdes
 
@@ -397,14 +367,13 @@ Con el ejecutable compilado los comandos son los mismos, sin `bun index.ts`:
 
 ```bash
 ./dist/koala-cowork.exe summarize "texto que quieres resumir"
-./dist/koala-cowork.exe mcp
 ```
 
 ## 🧪 Smoke test
 
-Comprueba que todo funciona sin gastar créditos del modelo: levanta un mock local de la API, renderiza los 17 diagramas y el documento, arma las piezas de contenido (el JSON y su HTML) con el ejecutable real, y valida el servidor MCP (tools, resumen, contenido y adjuntos en base64).
+Comprueba que todo funciona sin gastar créditos del modelo: levanta un mock local de la API, renderiza los 17 diagramas y el documento, y prueba el binario compilado.
 
-Si existe `dist/koala-cowork.exe`, el CLI y el MCP se prueban **con el ejecutable compilado** (`exe uso`, `exe summarize` y `mcp tools/list`); si no, se usa `bun index.ts`. La configuración del usuario se respalda en `debug/smoke-config-previo.json` y se restaura al terminar (también si cortas con Ctrl+C). ⛑️
+Si existe `dist/koala-cowork.exe`, el CLI se prueba **con el ejecutable compilado** (`exe uso` y `exe summarize`); si no, se usa `bun index.ts`. La configuración del usuario se respalda en `debug/smoke-config-previo.json` y se restaura al terminar (también si cortas con Ctrl+C). ⛑️
 
 ```bash
 bun debug/smoke.ts
@@ -417,8 +386,6 @@ Los resultados quedan en `debug/`:
 | `debug/smoke.log` | Resumen legible paso a paso |
 | `debug/smoke.json` | Resultados estructurados |
 | `debug/smoke-<tipo>.png` / `.docx` | Archivos generados por el render |
-| `debug/smoke-mcp-*.png` / `.docx` | Adjuntos devueltos por el MCP |
-| `debug/smoke-contenido-*.json` / `.html` | Entrada normalizada y pieza armada por el ejecutable |
 
 ## 🖱️ Pruebas en navegador
 
