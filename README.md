@@ -4,12 +4,12 @@
 
 ### El koala que no suelta el texto hasta exprimirlo
 
-De un texto largo a **4 niveles de resumen**, **17 diagramas PNG**, **documentos Word** y el **JSON de contenido** de infografías y presentaciones. Todo con una sola herramienta desde tu **línea de comandos**. 🚀
+De un texto largo a **4 niveles de resumen**, **17 diagramas PNG** y **documentos Word**. Todo con una sola herramienta, desde tu **línea de comandos** o por su **API HTTP**. 🚀
 
 ![Bun](https://img.shields.io/badge/Bun-runtime-000000?logo=bun&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-tipado-3178C6?logo=typescript&logoColor=white)
-![Salidas](https://img.shields.io/badge/salidas-PNG%20%C2%B7%20DOCX%20%C2%B7%20JSON-2F9E44)
-![Skills](https://img.shields.io/badge/skills-propias-F59F00)
+![Salidas](https://img.shields.io/badge/salidas-PNG%20%C2%B7%20DOCX-2F9E44)
+![API](https://img.shields.io/badge/API-HTTP-6E56CF)
 
 </div>
 
@@ -21,27 +21,17 @@ De un texto largo a **4 niveles de resumen**, **17 diagramas PNG**, **documentos
 | --- | --- |
 | 🐨 **Koala** | Trabajo paciente y completo: el texto se lee entero y nunca se pierde la mitad del camino |
 | 🤝 **Cowork** | Trabaja contigo: tú le das el texto y él entrega el paquete completo |
-| 🧾 **Paquete completo** | Un texto entra, sale resumen + diagramas + documentos + JSON de contenido |
+| 🧾 **Paquete completo** | Un texto entra, sale resumen + 17 diagramas + documento Word |
 | 🗣️ **Voz de marca** | Español claro, cercano y sin jerga; las cifras y fechas se conservan tal cual |
-| 🧠 **Skills propias** | Tú pones las reglas con skills en `~/.koalacowork`; el koala las respeta |
 
 ## ✨ ¿Qué hace?
 
 1. 📄 Le das un texto
 2. 🧠 Te devuelve el resumen en **4 niveles de detalle**, en texto
-3. 🎨 Lo entrega también como **17 diagramas** en imágenes PNG a partir del nivel más detallado
-4. 📄 Y como **documentos Word** (tablas) con la misma información
-5. 🧾 Y entrega el **JSON de contenido** de una infografía o una presentación, con el diseño elegido por nombre
+3. 🎨 Lo entrega también como **17 diagramas** en imágenes PNG, a partir del nivel más detallado
+4. 📄 Y como un **documento Word** con una tabla de análisis
 
-Todo se usa desde la **línea de comandos**. 🤖
-
-### 🎯 Los tres sellos del koala
-
-| Sello | Qué significa |
-| --- | --- |
-| 🔒 **Tu clave, tu equipo** | La configuración vive en `~/.secti_addons/modelr.json`; nada viaja a servidores del proyecto |
-| 🧩 **Un trabajo por pieza** | Resumidor, diagramador, documentador y las piezas de contenido: cada uno hace solo lo suyo |
-| 📦 **Todo en carpetas claras** | `diagramas/`, `documentos/` y `contenido/`: lo que generó el koala, a la vista |
+Se usa desde la **línea de comandos** o desde la **API HTTP** para que lo consuma otra aplicación. 🤖
 
 ## 📚 Los 4 niveles de resumen
 
@@ -56,16 +46,11 @@ Los diagramas y documentos se crean a partir del nivel más completo, así conse
 
 ## 📦 Formatos de salida
 
-El resumen no se queda en texto: sale en cuatro formatos. 📤
-
 | Formato | Qué entrega | Cómo se obtiene |
 |---------|-------------|-----------------|
-| 📝 Texto | Los 4 niveles (detallado → síntesis) | Pantalla con `summarize` |
-| 🖼️ Imagen PNG | Los 17 diagramas | Archivos en `diagramas/` |
-| 📄 Word DOCX | Las tablas de análisis | Archivo en `documentos/` |
-| 🧾 JSON | La entrada de contenido de infografía o presentación | Archivo en `contenido/<pieza>.json` o herramientas `infografia` / `presentacion` |
-
-El JSON también es un **formato abierto**: cualquier herramienta personalizada que respete sus claves puede consumirlo (ver más abajo, *Para herramientas propias*). 🧰
+| 📝 Texto | Los 4 niveles (detallado → síntesis) | Pantalla con `summarize` o `POST /resumen` |
+| 🖼️ Imagen PNG | Los 17 diagramas | Archivos en `diagramas/` o `POST /diagrama` |
+| 📄 Word DOCX | La tabla de análisis | Archivo en `documentos/` o `POST /documento` |
 
 ## 🎨 Los 17 diagramas
 
@@ -97,61 +82,6 @@ El JSON también es un **formato abierto**: cualquier herramienta personalizada 
 
 Se generan como archivo `.docx` con la librería [`docx`](https://www.npmjs.com/package/docx): título, tabla con encabezado resaltado y una fila por registro.
 
-## 🧾 El JSON de infografía y presentación
-
-Las herramientas `infografia` y `presentacion` **solo entregan el JSON de contenido**: el título, el subtítulo, el pie y las secciones, junto al diseño elegido por nombre. El JSON es el entregable; el diseño no se describe en texto.
-
-### Claves de la raíz
-
-| Clave | Tipo | ¿Obligatoria? | Para qué sirve |
-| --- | --- | --- | --- |
-| `titulo` | texto | recomendada | Título del documento y de la portada |
-| `subtitulo` | texto | no | Texto que acompaña al título |
-| `pie` | texto | no | Pie de la infografía; las presentaciones no lo usan |
-| `secciones` | lista de secciones | recomendada | El contenido, en el orden en que aparece |
-
-### Las secciones
-
-| Tipo | Claves | Qué muestra |
-| --- | --- | --- |
-| 📝 `resumen` | `titulo`, `texto` | Un título con un párrafo |
-| 📋 `lista` | `titulo`, `elementos` | Puntos; un arreglo justo después de un punto son sus subpuntos |
-| 📊 `tabla` | `celdas` (y `titulo` opcional) | Coordenadas `A1`, `B2`, … con su texto |
-
-```json
-{
-  "titulo": "Reforma educativa",
-  "subtitulo": "Resumen del periodo",
-  "pie": "Fuente",
-  "secciones": [
-    { "tipo": "resumen", "titulo": "Contexto", "texto": "Texto del contexto." },
-    { "tipo": "lista", "titulo": "Puntos", "elementos": ["Uno", ["Sub uno", "Sub dos"], "Dos"] },
-    { "tipo": "tabla", "titulo": "Datos", "celdas": { "A1": "Nombre", "B1": "Valor", "A2": "x", "B2": "1" } }
-  ]
-}
-```
-
-### Cómo se normaliza 🧽
-
-- Las secciones **incompletas o de tipo desconocido se omiten** sin error: sin `titulo` y `texto`, sin `elementos` o sin `celdas`, la sección no aparece.
-- Los **subpuntos son recursivos**: cada arreglo que sigue a un punto son sus subpuntos, a cualquier profundidad; el que aparece al inicio se ignora.
-- Las **coordenadas** de `tabla` van en mayúscula y los valores numéricos se vuelven texto (`"b2": 1` → `"B2": "1"`).
-- Los valores que no son texto, número ni lista se descartan.
-
-El archivo queda en `contenido/<pieza>.json` y el esquema formal (JSON Schema) vive como constante en `src/contenido/EsquemaEntrada.ts`. 📐
-
-El HTML que acompaña al JSON lo produce un ejecutable que se busca en el `PATH`; si está en otra ruta, se fija con la variable `CONTENIDO_BIN`. 🔧
-
-### Para herramientas propias 🧰
-
-El JSON es el **contrato**: cualquier herramienta personalizada que respete este formato puede consumirlo, sin depender de las herramientas de este proyecto.
-
-- 📥 **Consumirlo**: lee `contenido/<pieza>.json` desde tu propio programa y muéstralo con el diseño que quieras; solo necesita `titulo`, `subtitulo`, `pie` y `secciones`.
-- 📐 **Validarlo**: el esquema formal vive como constante en `src/contenido/EsquemaEntrada.ts` (`ESQUEMA_ENTRADA`), así que puedes validar JSON de cualquier fuente antes de usarlo.
-- ➕ **Extenderlo**: un tipo de sección nuevo es una clase en `src/contenido/` con el decorador `Seccion.tipo("<tipo>")`, importada en `src/contenido/Secciones.ts`; queda registrada y el resto sigue igual.
-
-Como las claves desconocidas se ignoran y las secciones incompletas se omiten, una herramienta externa puede empezar tolerante y endurecer sus reglas después. 🧩
-
 ## 🔄 ¿Cómo funciona por dentro?
 
 ### El camino del texto 🛤️
@@ -165,7 +95,7 @@ flowchart LR
     B --> N4["4️⃣ Síntesis"]
     N1 --> D["🎨 Diagramas y 📄 documentos"]
     D --> P["🖼️ Imágenes PNG"]
-    D --> W["📄 Documentos Word"]
+    D --> W["📄 Documento Word"]
 ```
 
 Cada nivel se crea leyendo **el texto completo**, solo cambia el grado de condensación que se pide. Si el texto es muy extenso, se procesa por partes sin perder ni una pieza. 🧩
@@ -174,102 +104,27 @@ Cada nivel se crea leyendo **el texto completo**, solo cambia el grado de conden
 
 | Agente | Responsabilidad |
 |--------|-----------------|
-| 🧠 `Resumidor` | Genera los 4 niveles y aplica las skills del usuario |
+| 🧠 `Resumidor` | Genera los 4 niveles de resumen |
 | 🎨 `Diagramador` | Genera los diagramas PNG |
-| 📄 `Documentador` | Genera los documentos Word |
-| 🎛️ `KoalaAgente` | Orquesta el flujo: resumir → generar diagramas → generar documentos |
+| 📄 `Documentador` | Genera el documento Word |
+| 🎛️ `KoalaAgente` | Orquesta el flujo: resumir → generar diagramas → generar documento |
 
 Cada pieza tiene un único trabajo, y el flujo se ejecuta de principio a fin con un solo comando.
 
-## 🧠 Skills del usuario
+## 🔌 La API HTTP
 
-El resumidor se puede **regular con skills**: instrucciones en Markdown que se guardan en la carpeta `.koalacowork` de tu usuario y que el agente lee como contexto antes de resumir. 🎛️
+Con `serve` queda disponible la API JSON en el puerto 3000. Todos los cuerpos son JSON; los archivos se devuelven como descarga. 📥
 
-Usa el **soporte oficial de skills de Mastra** (`Agent.skills`), así que respeta la especificación de Agent Skills y valida el formato al guardar.
+| Endpoint | Cuerpo | Devuelve |
+|----------|--------|----------|
+| 📝 `POST /resumen` | `texto`, `nivel` (1–4, opcional) | `{ nivel, resumen }` |
+| 📦 `POST /api/procesar` | `texto`, `nivel` (opcional), `conDiagramas` (opcional) | `{ niveles, archivos }` |
+| 🖼️ `POST /diagrama` | `tipo`, `texto` | El PNG como descarga |
+| 📄 `POST /documento` | `tipo`, `texto` | El DOCX como descarga |
+| 🚀 `POST /ejecutar` | `texto`, `conDiagramas` (opcional) | `{ niveles, archivos }` del flujo completo |
+| 📥 `GET /download/*ruta` | — | Un archivo generado del proyecto |
 
-| Elemento | Detalle |
-|----------|---------|
-| 📁 Carpeta | `~/.koalacowork` (se crea sola la primera vez) |
-| 📄 Archivo | `~/.koalacowork/<nombre>/SKILL.md` |
-| 📝 Contenido | Frontmatter con `name` y `description` + instrucciones en Markdown |
-| 🔤 Nombre | Solo minúsculas, números y guiones (máx. 64 caracteres) |
-| 🛠️ Herramienta | `escribir_skill` (`nombre`, `descripcion`, `instrucciones`, `tarea`, `herramientas`), disponible para el agente |
-
-Ejemplo de `~/.koalacowork/tono-formal/SKILL.md`:
-
-```markdown
----
-name: tono-formal
-description: "Usar cuando el resumen deba ser formal y sin coloquialismos"
----
-
-# Reglas
-- Trata de usted al lector
-- Sin emojis ni exclamaciones
-- Conserva las cifras y fechas exactas
-```
-
-### 🚦 Regular las herramientas y el nivel por tarea
-
-Una skill decide **qué herramientas puede usar cada tarea**, **con qué nivel de resumen** trabaja, **qué diseño** lleva la infografía o la presentación y **qué debe tomarse en cuenta** al diagramar o armar el contenido. Se declara en el frontmatter con `tarea` (`resumen`, `diagrama`, `documento`, `infografia`, `presentacion` o `todas`), `herramientas` (lista de permitidas; `[]` significa ninguna), `nivel` (1 detallado → 4 síntesis), `considerar` (criterios para los diagramas o el contenido) y `diseno` (diseño del catálogo para la infografía o la presentación):
-
-```markdown
----
-name: solo-resumen
-description: "Cuando se quieren resúmenes sin archivos"
-tarea: diagrama
-herramientas: []
-nivel: 3
-considerar: "Prioriza causas humanas y evita tecnicismos"
----
-
-# Reglas
-- No generar diagramas ni documentos
-- Si se generan, que salgan del resumen breve
-```
-
-`considerar` se agrega al pedido que recibe el agente que diagrama, así que aplica a **los 17 tipos**: el criterio viaja en el prompt del diagrama, no en el texto fuente. 🎯
-
-Con `diseno` la skill fija el diseño de la pieza: **el de la skill manda** sobre el que pida quien llama. En las piezas de contenido, `considerar` y el diseño fijado viajan en la descripción del tool, para que se tengan en cuenta al armar el JSON:
-
-```markdown
----
-name: contenido-formal
-description: "Cuando la infografía deba salir con el diseño formal"
-tarea: infografia
-diseno: fo_gaceta_oficial
-considerar: "Prioriza cifras y fechas exactas"
----
-```
-
-| Tarea | Herramientas disponibles |
-|-------|--------------------------|
-| 📝 `resumen` | `escribir_skill` |
-| 🎨 `diagrama` | `renderizar_diagrama` (una por cada tipo) |
-| 📄 `documento` | `renderizar_documento` |
-| 🧾 `infografia` | `infografia` |
-| 🧾 `presentacion` | `presentacion` |
-
-Cómo se aplica:
-
-- Si **ninguna** skill restringe una tarea, todo queda permitido y se usa el **nivel 1** (comportamiento por defecto).
-- Si varias skills restringen la misma tarea, se aplica la **intersección** de herramientas y el **nivel más detallado** (el número más bajo).
-- Cada tarea usa su propio nivel: los diagramas y documentos toman su texto del nivel fijado para `diagrama` y `documento`; `resumir` usa el de `resumen` cuando no se indica uno.
-- Cuando una herramienta queda bloqueada, el agente recibe un **error explícito** y, en el flujo completo, esa tarea se omite sin afectar a las demás (si bloqueas diagramas, los documentos se siguen generando). 🚫
-
-### 🔒 Una skill por regulación
-
-Para que las skills no se pisen, cada campo (`herramientas`, `nivel`, `considerar`, `diseno`) puede declararlo **una sola skill por tarea**. Al guardar se valida:
-
-| Caso | Resultado |
-|------|-----------|
-| Otra skill ya regula ese campo para la misma tarea | ❌ Se rechaza y se pide editar la existente |
-| Otra skill lo regula con `tarea: todas` | ❌ También se rechaza (aplica a todas) |
-| Se regula un campo sin declarar `tarea` | ❌ Se rechaza |
-| Volver a guardar la **misma** skill (mismo nombre) | ✅ Se permite, es una edición |
-| Campos distintos en la misma tarea | ✅ Se permite (una puede fijar `nivel` y otra `considerar`)|
-
-Las skills se **releen en cada ejecución**, así que puedes editarlas a mano o pedirle al agente que las escriba sin reiniciar nada. ♻️
+También hay endpoints de conversaciones: `GET`/`POST /api/conversaciones`, `GET`/`PATCH`/`DELETE /api/conversaciones/:id` y `POST /api/conversaciones/:id/mensajes`.
 
 ## 🚀 Empezar
 
@@ -289,7 +144,7 @@ bun index.ts config --provider openrouter --key TU_API_KEY --model openai/gpt-4o
 bun index.ts config --provider openai --url http://localhost:1234/v1 --key TU_API_KEY --model gpt-4o-mini
 ```
 
-La configuración queda guardada en tu equipo (carpeta `.secti_addons` de tu usuario) y solo necesitas hacerla una vez. 💾
+La configuración queda guardada en tu equipo (carpeta `.secti_addons` de tu usuario) y solo necesitas hacerla una vez. Si existe `~/.oselotl/providers.json`, se toma de ahí. 💾
 
 ### 2️⃣ Resume, diagrama y documenta
 
@@ -326,7 +181,11 @@ bun index.ts summarize "texto que quieres resumir"
 
 En pantalla verás los 4 niveles 🧠 y, después, las rutas de los 17 PNG en `diagramas/` 🖼️ y del documento en `documentos/` 📄.
 
-¿Solo quieres el resumen sin archivos? Añade la opción `--solo-resumen` ✂️:
+| Opción | ¿Qué hace? |
+|--------|-----------|
+| `--solo-resumen` | ✂️ Genera solo los 4 niveles, sin archivos |
+| `--diagramas <dir>` | 📁 Cambia el directorio de los PNG |
+| `--documentos <dir>` | 📁 Cambia el directorio de los DOCX |
 
 ```bash
 bun index.ts summarize --solo-resumen "texto que quieres resumir"
@@ -338,14 +197,7 @@ bun index.ts summarize --solo-resumen "texto que quieres resumir"
 bun index.ts serve [--puerto <puerto>]
 ```
 
-Arranca un servidor Express con los endpoints del agente (puerto 3000 por defecto). Todos reciben JSON; los archivos se devuelven como descarga. 📥
-
-| Endpoint | Cuerpo | Devuelve |
-|----------|--------|----------|
-| 📝 `POST /resumen` | `texto`, `nivel` (1–4, opcional) | `{ nivel, resumen }` |
-| 🖼️ `POST /diagrama` | `tipo`, `texto` | El PNG como descarga |
-| 📄 `POST /documento` | `tipo`, `texto` | El DOCX como descarga |
-| 📦 `POST /ejecutar` | `texto`, `conDiagramas` (opcional) | `{ niveles, archivos }` del flujo completo |
+Arranca un servidor Express con los endpoints del agente (puerto 3000 por defecto). 📥
 
 ### 🧭 Si te pierdes
 
@@ -387,28 +239,6 @@ Los resultados quedan en `debug/`:
 | `debug/smoke.json` | Resultados estructurados |
 | `debug/smoke-<tipo>.png` / `.docx` | Archivos generados por el render |
 
-## 🖱️ Pruebas en navegador
-
-Las piezas de contenido se prueban **en un navegador real** con [Puppeteer](https://pptr.dev): se arma el JSON, se abre el HTML y se revisa que se vea lo que se entregó.
-
-```bash
-bun test
-```
-
-Qué revisa cada pieza (`infografia` y `presentacion`):
-
-| Revisión | Qué comprueba |
-| --- | --- |
-| 🧾 JSON | El archivo existe, tiene el título y las tres secciones normalizadas (subpuntos y celdas) |
-| 🖼️ HTML | El archivo existe y se abre con la hoja de estilos aplicada |
-| 👀 Texto visible | La portada muestra el título y el subtítulo; la infografía además el resumen, la lista con subpuntos y la tabla |
-| 👁️ Visibilidad | Cada sección queda visible (opacidad 1, con alto y texto) cuando terminan sus animaciones |
-| 🎞️ Láminas | En la presentación se recorre cada lámina y se comprueba su texto (la tabla no se muestra ahí) |
-| 🚫 Consola | La página no lanza errores de consola ni de JavaScript |
-| 📸 Captura | Guarda `debug/pruebas/<pieza>.png` para revisarlo a ojo |
-
-El navegador lo descarga Puppeteer; si falta, se instala con `bunx puppeteer browsers install chrome`. 🧷
-
 ## ⚙️ Cambiar de proveedor o modelo
 
 Vuelve a ejecutar `config` con los nuevos valores. Lo que no indiques se conserva de la configuración anterior, así que puedes cambiar solo el modelo sin reescribir todo. 🔄
@@ -419,7 +249,7 @@ bun index.ts config --provider openrouter --model anthropic/claude-3.5-sonnet
 
 ## 🏷️ Koala Cowork en una línea
 
-> **Koala Cowork** 🐨 — *el resumidor que no suelta el texto hasta entregarte el paquete completo: 4 niveles, 17 diagramas, documentos Word y el JSON de contenido.*
+> **Koala Cowork** 🐨 — *el resumidor que no suelta el texto hasta entregarte el paquete completo: 4 niveles, 17 diagramas y documentos Word.*
 
 Si tienes que presentarlo en algún lado, con eso basta. 📣
 
@@ -430,11 +260,9 @@ Si tienes que presentarlo en algún lado, con eso basta. 📣
 | ⚙️ Configuración | `~/.secti_addons/modelr.json` |
 | 🖼️ Diagramas | Carpeta `diagramas/` del proyecto (con `--solo-resumen` no se generan) |
 | 📄 Documentos | Carpeta `documentos/` del proyecto (con `--solo-resumen` no se generan) |
-| 🧾 Contenido | Carpeta `contenido/` del proyecto: `<pieza>.json` y su HTML |
 | 🧪 Resultados del smoke test | Carpeta `debug/` |
-| 🧠 Skills del usuario | `~/.koalacowork/<nombre>/SKILL.md` |
 
-Los nombres de archivo usan el tipo interno, así que un diagrama de Ishikawa queda en `diagramas/ishikawa.png`, la tabla de cambios en `documentos/tabla-cambios.docx` y la entrada de una infografía en `contenido/infografia.json`. 📂
+Los nombres de archivo usan el tipo interno, así que un diagrama de Ishikawa queda en `diagramas/ishikawa.png` y la tabla de cambios en `documentos/tabla-cambios.docx`. 📂
 
 ---
 
