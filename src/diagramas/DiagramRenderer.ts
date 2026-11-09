@@ -22,7 +22,7 @@ export abstract class DiagramRenderer {
   /** Extensión del archivo generado. */
   readonly extension = "png";
   /** Directorio de salida del archivo generado. */
-  readonly dir = "diagramas";
+  dir = "diagramas";
   /** Descripción textual de los datos que espera `draw`. */
   abstract readonly schema: string;
 

@@ -23,7 +23,7 @@ export class TablaCambiosDocx {
   /** Extensión del archivo generado. */
   readonly extension = "docx";
   /** Directorio de salida de los documentos Word. */
-  readonly dir = "documentos";
+  dir = "documentos";
 
   /**
    * Construye el documento y lo escribe en disco.
